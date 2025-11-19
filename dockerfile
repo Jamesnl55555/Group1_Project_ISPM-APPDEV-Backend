@@ -1,40 +1,64 @@
-# Use official PHP with Apache
+# Use official PHP 8.3 with Apache
 FROM php:8.3-apache
 
-# Enable Apache mod_rewrite
+# Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
-# Install system dependencies
+# Install system dependencies required by Laravel and PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
     sqlite3 \
-    libsqlite3-dev
+    libsqlite3-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    pkg-config \
+    libonig-dev \
+    libxml2-dev \
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql pdo_sqlite zip gd
+# Configure GD extension to support JPEG, PNG, WebP, FreeType
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    --with-webp
 
-# Install Composer
+# Install PHP extensions commonly required by Laravel
+RUN docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    pdo_sqlite \
+    zip \
+    gd \
+    mbstring \
+    bcmath \
+    exif \
+    pcntl
+
+# Install Composer (from official Composer image)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel files
+# Copy project files
 COPY . .
 
-# Install dependencies
+# Install Composer dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Generate Laravel cache
+# Cache Laravel configuration for production
 RUN php artisan config:cache
 
-# Change permissions for storage
+# Ensure proper permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port
+# Expose port for Render
 EXPOSE 8080
 
-# Start Laravel on Render-assigned PORT
+# Start Laravel server
 CMD php artisan serve --host 0.0.0.0 --port 8080
