@@ -1,5 +1,5 @@
 # ==========================
-# Laravel SPA Backend Dockerfile
+# Laravel SPA Backend Dockerfile for Render Free Tier
 # ==========================
 FROM php:8.3-apache
 
@@ -51,16 +51,9 @@ RUN php artisan config:cache \
     && php artisan view:cache
 
 # --------------------------
-# Apache configuration for Laravel (root)
+# Copy Apache config
 # --------------------------
-RUN echo '<VirtualHost *:80>
-    DocumentRoot /var/www/html
-    <Directory /var/www/html>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # --------------------------
 # Expose port 80
