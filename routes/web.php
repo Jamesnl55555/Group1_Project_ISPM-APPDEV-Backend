@@ -48,9 +48,9 @@ Route::get('register', [RegisteredUserController::class, 'create'])
 //     return Inertia::render('Dashboard', ['user' => $user, 'tHistory' => $tHistory, 'tRecords'=> $tRecords, 'pHistory' => $pHistory, 'uHistory' => $uHistory]);
 //     })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/fetchproducts', [AddProductController::class, 'fetchProducts'])->name('fetchproducts');
-    Route::get('/fetchtransactions', [TransactionController::class, 'fetchTransactions'])->name('fetchtransactions');
+// Route::middleware(['auth', 'verified'])->group(function () {
+//     Route::get('/fetchproducts', [AddProductController::class, 'fetchProducts'])->name('fetchproducts');
+//     Route::get('/fetchtransactions', [TransactionController::class, 'fetchTransactions'])->name('fetchtransactions');
 
     // Existing Sales Report page
     // Route::get('/sales-report', function () {
@@ -189,11 +189,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //     });
 
 
-Route::get('/inventory/create', [InventoryProductController::class, 'create'])->name('inventory.create');
-Route::post('/inventory/store', [InventoryProductController::class, 'store'])->name('inventory.store');
-Route::put('/inventory/{id}', [InventoryProductController::class, 'update'])->name('inventory.update');
-Route::delete('/inventory/{id}', [InventoryProductController::class, 'destroy'])->name('inventory.destroy');
-Route::get('/make-transaction', [MakeTransactionController::class, 'index'])->name('make-transaction');
+// Route::get('/inventory/create', [InventoryProductController::class, 'create'])->name('inventory.create');
+// Route::post('/inventory/store', [InventoryProductController::class, 'store'])->name('inventory.store');
+// Route::put('/inventory/{id}', [InventoryProductController::class, 'update'])->name('inventory.update');
+// Route::delete('/inventory/{id}', [InventoryProductController::class, 'destroy'])->name('inventory.destroy');
+// Route::get('/make-transaction', [MakeTransactionController::class, 'index'])->name('make-transaction');
 
 // Route::get('/add-product', function () {
 //     return Inertia::render('QA/AddProduct');
@@ -229,6 +229,6 @@ Route::get('/make-transaction', [MakeTransactionController::class, 'index'])->na
 //     Route::post('/import', [ExcelController::class, 'import'])->name('import');
 //     Route::get('/create-transaction', [TransactionController::class, 'createTransaction'])->name('create-transaction');
 
-});
+// });
 
 // require __DIR__.'/auth.php';
