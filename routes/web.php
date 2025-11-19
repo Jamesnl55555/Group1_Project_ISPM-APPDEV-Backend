@@ -21,6 +21,9 @@ use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
+
+Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
+
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
@@ -33,8 +36,6 @@ Route::middleware('guest')->group(function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
-Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
 
 
 
