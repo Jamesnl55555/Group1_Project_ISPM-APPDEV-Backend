@@ -40,23 +40,20 @@ RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-avail
 # 9️⃣ Install PHP dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# 🔹 Laravel config cache (route:cache skipped for API-only project)
+# 🔹 Clear caches safely (skip DB-dependent cache:clear)
+RUN php artisan config:clear --no-ansi \
+    && php artisan route:clear --no-ansi \
+    && php artisan view:clear --no-ansi
+
+# 🔹 Cache config
 RUN php artisan config:cache
 
-# 🔹 Clear any stale caches to avoid 500 on csrf-cookie
-RUN php artisan config:clear \
-    && php artisan cache:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
+# 10️⃣ Run migrations at container start (runtime)
+# This will use production DB from Render environment variables
+CMD php artisan migrate --force && apache2-foreground
 
-# 🔹 Run migrations automatically
-RUN php artisan migrate --force
-
-# 10️⃣ Set permissions
+# 11️⃣ Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 11️⃣ Expose port 80 (Render maps $PORT automatically)
+# 12️⃣ Expose port 80 (Render maps $PORT automatically)
 EXPOSE 80
-
-# 12️⃣ Start Apache in foreground
-CMD ["apache2-foreground"]
