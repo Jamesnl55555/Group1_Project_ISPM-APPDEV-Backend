@@ -40,9 +40,10 @@ RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-avail
 # 9️⃣ Install PHP dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# 🔹 Laravel cache & migrations
+# 🔹 Laravel config cache (route:cache skipped for API-only project)
 RUN php artisan config:cache
-RUN php artisan route:cache
+
+# 🔹 Run migrations automatically
 RUN php artisan migrate --force
 
 # 10️⃣ Set permissions
