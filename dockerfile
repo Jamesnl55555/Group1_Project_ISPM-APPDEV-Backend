@@ -1,10 +1,10 @@
-# Use official PHP 8.3 with Apache
+# 1️⃣ Use official PHP with Apache
 FROM php:8.3-apache
 
-# Enable Apache mod_rewrite for Laravel routing
+# 2️⃣ Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Install system dependencies required by Laravel and PHP extensions
+# 3️⃣ Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -14,57 +14,42 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
-    libwebp-dev \
+    libpq-dev \
     pkg-config \
-    libonig-dev \
-    libxml2-dev \
     curl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Configure GD extension to support JPEG, PNG, WebP, FreeType
-RUN docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-    --with-webp
+# 4️⃣ Install PHP extensions
+RUN docker-php-ext-configure gd --with-jpeg --with-freetype
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql pdo_sqlite zip gd
 
-# Install PHP extensions commonly required by Laravel
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    pdo_sqlite \
-    zip \
-    gd \
-    mbstring \
-    bcmath \
-    exif \
-    pcntl
-
-# Install Composer from official Composer image
+# 5️⃣ Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# 6️⃣ Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel project files into container
+# 7️⃣ Copy Laravel files
 COPY . .
 
-# Install PHP dependencies
+# 8️⃣ Set Apache document root to Laravel public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf
+
+# 9️⃣ Install PHP dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Cache Laravel configuration for production
+# 🔹 Laravel cache & migrations
 RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan migrate --force
 
-# Ensure proper permissions for storage and bootstrap cache
+# 10️⃣ Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Set Apache document root to Laravel's public folder
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# 11️⃣ Expose port 80 (Render maps $PORT automatically)
+EXPOSE 80
 
-# Expose port 8080 for Render
-EXPOSE 8080
-
-# Generate Laravel config cache
-RUN php artisan config:cache
-
-# Run migrations on deploy (force to bypass prod warning)
-RUN php artisan migrate --force
+# 12️⃣ Start Apache in foreground
+CMD ["apache2-foreground"]
