@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -13,13 +14,13 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    // public function create(): Response
-    // {
-    //     return Inertia::render('Auth/Login', [
-    //         'canResetPassword' => Route::has('password.request'),
-    //         'status' => session('status'),
-    //     ]);
-    // }
+    public function create()
+    {
+        return response()->json([
+        'canResetPassword' => Route::has('password.request'),
+        'status' => session('status')
+        ]);
+    }
 
     /**
      * Handle an incoming authentication request.
@@ -32,7 +33,7 @@ class AuthenticatedSessionController extends Controller
 
         return response()->json([
         'success' => true,
-        'user' => $request->user(),
+        'user' => Auth::user(),
         'token' => $request->user()->createToken('api-token')->plainTextToken,
         ]);
     }
@@ -49,6 +50,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json([
+        'canResetPassword' => Route::has('password.request'),
         'success' => true
         ]);
     }

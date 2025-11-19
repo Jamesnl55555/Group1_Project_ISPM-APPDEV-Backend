@@ -17,6 +17,23 @@ use App\Models\TransactionHistory;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+
+Route::middleware('guest')->group(function () {
+    Route::get('register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+    Route::post('register', [RegisteredUserController::class, 'store']);
+    
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+});
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+
 
 // Route::get('/', function () {
 //     return Inertia::render('Welcome', [
@@ -217,4 +234,4 @@ Route::get('/make-transaction', [MakeTransactionController::class, 'index'])->na
 
 });
 
-require __DIR__.'/auth.php';
+// require __DIR__.'/auth.php';

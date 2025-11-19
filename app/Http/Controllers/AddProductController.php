@@ -8,7 +8,6 @@ class AddProductController extends Controller
     public function fetchProducts()
     {
         $products = Product::latest()->take(10)->get();
-
         return response()->json($products);
     }
 
