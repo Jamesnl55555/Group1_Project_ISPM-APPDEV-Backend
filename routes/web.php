@@ -1,6 +1,7 @@
 <?php
 require __DIR__.'/auth.php';
 
+use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ExcelController;
@@ -32,6 +33,8 @@ Route::middleware('guest')->group(function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::get('/sanctum/csrf-cookie', [\Laravel\Sanctum\Http\Controllers\CsrfCookieController::class, 'show']);
 
 
 
