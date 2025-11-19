@@ -3,7 +3,7 @@
 return [
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://localhost:5173', ['https://*.vercel.app']],
+    'allowed_origins' => ['*'],
     'allowed_headers' => ['*'],
     'supports_credentials' => true,
 ];
