@@ -1,7 +1,6 @@
 <?php
 require __DIR__.'/auth.php';
 
-use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ExcelController;
