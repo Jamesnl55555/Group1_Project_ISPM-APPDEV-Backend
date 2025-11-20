@@ -1,5 +1,5 @@
 # ==========================
-# Laravel SPA Backend Dockerfile for Render Free Tier
+# Laravel SPA Backend Dockerfile for Render
 # ==========================
 FROM php:8.3-apache
 
@@ -18,9 +18,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql zip gd
 
-# Enable Apache rewrite
-RUN a2enmod rewrite
-RUN a2enmod headers
+# Enable Apache modules
+RUN a2enmod rewrite && a2enmod headers
 
 # --------------------------
 # Set working directory
@@ -33,13 +32,22 @@ WORKDIR /var/www/html
 COPY . .
 
 # --------------------------
-# Install Composer (non-interactive)
+# Install Composer dependencies
 # --------------------------
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # --------------------------
-# Set permissions for Laravel
+# Ensure storage & cache directories exist
+# --------------------------
+RUN mkdir -p storage/logs \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p bootstrap/cache
+
+# --------------------------
+# Permissions (correct for Render)
 # --------------------------
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
@@ -47,12 +55,12 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 # --------------------------
 # Cache config/routes/views
 # --------------------------
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+RUN php artisan config:cache || true \
+    && php artisan route:cache || true \
+    && php artisan view:cache || true
 
 # --------------------------
-# Copy Apache config
+# Use your Apache config
 # --------------------------
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
@@ -61,10 +69,4 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 # --------------------------
 EXPOSE 80
 
-
-RUN chmod -R 777 storage bootstrap/cache
-
-# --------------------------
-# Start Apache
-# --------------------------
 CMD ["apache2-foreground"]
