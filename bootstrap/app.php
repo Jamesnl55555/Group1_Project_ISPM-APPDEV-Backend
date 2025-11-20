@@ -13,25 +13,33 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
-        $middleware->web(append: [
-            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+
+        // Sanctum must be FIRST in the web stack
+        $middleware->web(
+            prepend: [
+                \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            ],
+            append: [
+                \Illuminate\Cookie\Middleware\EncryptCookies::class,
+                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+                \Illuminate\Session\Middleware\StartSession::class,
+                \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+                \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            ]
+        );
+
+        // CORS handler
+        $middleware->append([
+            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
-        $middleware->append([
-        \Illuminate\Http\Middleware\HandleCors::class,
-        ]);
-        
-        // Exclude API routes from CSRF verification
+        // Exclude API routes from CSRF
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
