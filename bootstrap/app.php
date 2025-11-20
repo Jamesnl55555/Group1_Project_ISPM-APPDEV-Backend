@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
         
+        $middleware->append([
+        \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+        
         // Exclude API routes from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'api/*',
