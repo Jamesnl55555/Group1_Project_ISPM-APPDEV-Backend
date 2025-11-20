@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 # Enable Apache rewrite
 RUN a2enmod rewrite
+RUN a2enmod headers
 
 # --------------------------
 # Set working directory
