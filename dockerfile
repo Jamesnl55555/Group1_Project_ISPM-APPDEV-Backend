@@ -38,16 +38,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # --------------------------
-# Ensure storage & cache directories exist
+# Ensure all Laravel writable directories exist
 # --------------------------
 RUN mkdir -p storage/logs \
-    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/framework/cache/data \
     && mkdir -p storage/framework/sessions \
     && mkdir -p storage/framework/views \
     && mkdir -p bootstrap/cache
 
 # --------------------------
-# Permissions (correct for Render)
+# Set correct permissions for Render (Apache www-data)
 # --------------------------
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
@@ -60,7 +60,7 @@ RUN php artisan config:cache || true \
     && php artisan view:cache || true
 
 # --------------------------
-# Use your Apache config
+# Copy Apache config
 # --------------------------
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
@@ -69,4 +69,7 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 # --------------------------
 EXPOSE 80
 
+# --------------------------
+# Start Apache
+# --------------------------
 CMD ["apache2-foreground"]
