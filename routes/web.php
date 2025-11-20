@@ -18,7 +18,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-
+Route::get('/debug-log', function () {
+    return response()->file(storage_path('logs/laravel.log'));
+});
 Route::middleware('web')->group(function () {
 Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');

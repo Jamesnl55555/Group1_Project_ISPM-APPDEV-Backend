@@ -61,6 +61,9 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 # --------------------------
 EXPOSE 80
 
+
+RUN chmod -R 777 storage bootstrap/cache
+
 # --------------------------
 # Start Apache
 # --------------------------
