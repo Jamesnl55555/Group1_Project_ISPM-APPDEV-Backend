@@ -19,8 +19,20 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 Route::get('/debug-log', function () {
-    return response()->file(storage_path('logs/laravel.log'));
+    $path = storage_path('logs/laravel.log');
+
+    if (!file_exists($path)) {
+        return "NO LOG FILE FOUND at: $path";
+    }
+
+    $contents = @file_get_contents($path);
+    if ($contents === false) {
+        return "CANNOT READ LOG FILE — PERMISSION ERROR";
+    }
+
+    return nl2br($contents);
 });
+
 Route::middleware('web')->group(function () {
 Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
