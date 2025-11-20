@@ -1,12 +1,25 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'login',
+        'logout',
+        'register',
+    ],
+
     'allowed_methods' => ['*'],
-    'allowed_origins' => [],
-    'allowed_origins_patterns' => ['/https:\/\/.*\.vercel\.app$/'],
+
+    'allowed_origins' => null,
+    'allowed_origins_patterns' => [
+        '/^https:\/\/.*\.vercel\.app$/',
+    ],
+
     'allowed_headers' => ['*'],
-    'with_credentials' => true,
+
     'supports_credentials' => true,
 ];
+
+
 
