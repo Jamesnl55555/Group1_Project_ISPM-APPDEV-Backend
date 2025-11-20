@@ -15,8 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->web(append: [
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
-        
+
         $middleware->append([
         \Illuminate\Http\Middleware\HandleCors::class,
         ]);
