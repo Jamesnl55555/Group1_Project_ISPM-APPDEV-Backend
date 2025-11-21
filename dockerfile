@@ -1,7 +1,7 @@
-# Laravel SPA Backend Dockerfile for Render
+# Laravel SPA Backend Dockerfile for Render Free
 FROM php:8.3-apache
 
-# Install dependencies
+# Install PHP extensions and dependencies
 RUN apt-get update && apt-get install -y \
     unzip git libpq-dev libzip-dev libonig-dev libpng-dev libjpeg-dev libfreetype6-dev \
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -20,16 +20,13 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set permissions
+# Set storage permissions (Render Free requires 777 for sessions/logs)
 RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache
 
-# Cache config/routes/views
-RUN php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
+# Do NOT run php artisan config:cache at build — environment variables are injected at runtime
 
-# Copy Apache config (point to /public)
+# Copy Apache config (points to /public)
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port
