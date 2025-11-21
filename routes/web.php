@@ -33,6 +33,10 @@ Route::get('/debug-log', function () {
     return nl2br($contents);
 });
 
+Route::get('/check-key', function() {
+    return env('APP_KEY') ?: 'no key found';
+});
+
 Route::middleware('web')->group(function () {
 Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
