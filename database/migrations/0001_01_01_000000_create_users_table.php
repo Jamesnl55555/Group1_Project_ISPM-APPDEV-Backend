@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    public $withinTransaction = false;
     /**
      * Run the migrations.
      */
@@ -17,7 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->decimal('capital', 10, 2)->default(00.00);
+            $table->decimal('capital', 10, 2)->default(0.00);
             $table->rememberToken();
             $table->timestamps();
         });
