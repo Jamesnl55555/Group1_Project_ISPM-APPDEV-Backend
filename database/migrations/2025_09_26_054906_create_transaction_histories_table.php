@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('transaction_histories', function (Blueprint $table) {
             $table->id();
             $table->string('user_name');
+            $table->integer('product_number');
             $table->string('action');
             $table->text('changed_data');
             $table->timestamps();

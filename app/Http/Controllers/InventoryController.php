@@ -62,8 +62,9 @@ class InventoryController extends Controller
             'cart.*.price' => 'required|numeric',
         ]);
         
-        //product number gets the latest product number in the database
-        $productnumber = Product::max('id') + 1;
+        //product number gets the current transaction number in the database
+        $productnumber = Transaction::max('id') + 1;
+
         $user = $request->user();
         foreach($validatedData['cart'] as $item){
 
