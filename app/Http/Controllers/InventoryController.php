@@ -61,11 +61,15 @@ class InventoryController extends Controller
             'cart.*.quantity' => 'required|integer',
             'cart.*.price' => 'required|numeric',
         ]);
+        
+        //product number gets the latest product number in the database
+        $productnumber = Product::max('id') + 1;
         $user = $request->user();
         foreach($validatedData['cart'] as $item){
 
             Transaction::create([
                 'user_name' => $user->name,
+                'product_number' => $productnumber,
                 'product_name' => $item['name'],
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
@@ -83,6 +87,13 @@ class InventoryController extends Controller
             'changed_data' => 'quantity decreased by ' . $item['quantity'],
         ]);
         }
+
+        Capital::create([
+            'amount' => array_sum(array_map(function($item) {
+                return $item['price'] * $item['quantity'];
+            }, $validatedData['cart'])),
+            'type' => 'income',
+        ]);
 
         return response()->json([
             'success' => true,
