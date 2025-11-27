@@ -2,16 +2,20 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ExcelController;
+use App\Models\Capital;
 use App\Models\Product;
 use App\Models\Transaction;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 Route::middleware('web')->group(function () {
 Route::get('register', [RegisteredUserController::class, 'create'])
@@ -23,7 +27,25 @@ Route::get('register', [RegisteredUserController::class, 'create'])
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 });
 
+
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->name('password.request');
+
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->name('password.email');
+
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+
+    Route::post('reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.store');
+
+
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+    return $request->user();
+    })->name('user');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
     
     Route::get('/fetchproducts', function () {
@@ -33,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
             'products' => $products,
         ]);
     })->name('fetchproducts');
+    
     Route::get('/fetchtransactions', function () {
     $transactions = Transaction::latest()->take(10)->get();
         return response()->json([
@@ -40,12 +63,42 @@ Route::middleware('auth:sanctum')->group(function () {
             'transactions' => $transactions,
         ]);
     })->name('fetchtransactions');
+
+    Route::get('/fetchcapital', function () {
+    $capital = Capital::latest()->take(10)->get();
+        return response()->json([
+            'success' => true,
+            'capital' => $capital,
+        ]);
+    })->name('fetchcapital');
     
     Route::post('/import', [ExcelController::class, 'import'])->name('import');
     Route::post('/postproducts', [InventoryController::class, 'addItem'])->name('postproducts'); 
     Route::post('/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('update-product');
     Route::post('/delete-item/{id}', [InventoryController::class, 'deleteItem'])->name('delete-item');
     Route::post('/checkout', [InventoryController::class, 'checkout'])->name('checkout');
+    
+    Route::get('/email/verify-status', function (Request $request) {
+        return response()->json([
+            'verified' => $request->user()->hasVerifiedEmail(),
+        ]);
+    })->name('verification.status');
 
-        
+    Route::post('/email/verification-notification', 
+        [EmailVerificationNotificationController::class, 'store']
+    )->middleware('throttle:6,1')
+     ->name('verification.send');
+    
+    Route::get('/verify-email/{id}/{hash}', 
+        [VerifyEmailController::class, '__invoke']
+    )->middleware(['signed', 'throttle:6,1'])
+     ->name('verification.verify');
+
+     Route::post('/confirm-password', 
+        [ConfirmablePasswordController::class, 'store']
+    );
+
+    Route::put('/password', 
+        [PasswordController::class, 'update']
+    )->name('password.update');
 });
