@@ -65,10 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
     })->name('fetchtransactions');
 
     Route::get('/fetchcapital', function () {
-    $capital = Capital::latest()->take(10)->get();
+    $capitals = Capital::latest()->take(10)->get();
         return response()->json([
             'success' => true,
-            'capital' => $capital,
+            'capitals' => $capitals,
         ]);
     })->name('fetchcapital');
     
