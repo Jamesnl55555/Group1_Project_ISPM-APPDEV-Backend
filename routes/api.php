@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     $products = Product::latest()->take(10)->get();
         return response()->json([
             'success' => true,
-            'products' => $products,
+            'products' => $products ?: [],
         ]);
     })->name('fetchproducts');
     
@@ -60,7 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     $transactions = Transaction::latest()->take(10)->get();
         return response()->json([
             'success' => true,
-            'transactions' => $transactions,
+            'transactions' => $transactions ?: [],
         ]);
     })->name('fetchtransactions');
 
@@ -68,7 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
     $capitals = Capital::latest()->take(10)->get();
         return response()->json([
             'success' => true,
-            'capitals' => $capitals,
+            'capitals' => $capitals ?: [],
         ]);
     })->name('fetchcapital');
     
