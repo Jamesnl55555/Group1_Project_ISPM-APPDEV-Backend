@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -65,11 +66,20 @@ Route::middleware('auth:sanctum')->group(function () {
     })->name('fetchtransactions');
 
     Route::get('/fetchcapital', function () {
-    $capitals = Capital::latest()->take(10)->get();
+        try {
+        $capitals = Capital::latest()->take(10)->get();
         return response()->json([
             'success' => true,
-            'capitals' => $capitals ?: [],
+            'capitals' => $capitals,
         ]);
+        }catch (\Exception $e) {
+        Log::error('FetchCapital error: '.$e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch capitals',
+            'capitals' => [],
+        ], 500);
+        }
     })->name('fetchcapital');
     
     Route::post('/import', [ExcelController::class, 'import'])->name('import');
