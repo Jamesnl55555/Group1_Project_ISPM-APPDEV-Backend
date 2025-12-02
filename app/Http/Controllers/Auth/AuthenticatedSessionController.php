@@ -27,13 +27,18 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request)
     {
         $request->authenticate();
-
+        
+        $remember = $request->boolean('remember');
+        $expiration = $remember ? now()->addWeeks(2) : now()->addHours(2);
+        $tokenResult = $request->user()->createToken('api-token');
+        $token = $tokenResult->plainTextToken;
         $request->session()->regenerate();
 
         return response()->json([
-                'success' => true,
-                'user' => Auth::user(),
-                'token' => $request->user()->createToken('api-token')->plainTextToken,
+            'success' => true,
+            'user' => Auth::user(),
+            'token' => $token,
+            'expires_at' => $expiration->toDateTimeString(),
         ]);
     }
 
@@ -42,14 +47,14 @@ class AuthenticatedSessionController extends Controller
     */
     public function destroy(Request $request)
     {
-        //storage the token
-        $token = $request->user()->currentAccessToken();
-        //revoke the token
-        $token->delete();
+        $user = $request->user();
+        if ($user) {
+            $user->currentAccessToken()->delete();
+        }
+
         return response()->json([
-                'canResetPassword' => Route::has('password.request'),
-                'success' => true,
-                'message' => 'Logged out successfully',
+            'success' => true,
+            'message' => 'Logged out successfully',
         ]);
     }
 }
