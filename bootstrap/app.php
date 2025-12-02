@@ -37,9 +37,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Exclude API routes from CSRF
-        $middleware->validateCsrfTokens(except: [
-            'api/*',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Custom exception handling if any

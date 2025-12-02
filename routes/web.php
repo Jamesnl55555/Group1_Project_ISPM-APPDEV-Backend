@@ -1,51 +1,46 @@
 <?php
 require __DIR__.'/auth.php';
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\ExcelController;
-use App\Http\Controllers\MakeTransactionController;
-use App\Http\Controllers\AddProductController;
-use App\Http\Controllers\TransactionRecSectionController;
-use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\InventoryProductController;
-use App\Models\Product;
-use App\Models\Transaction;
-use App\Models\ProductHistory;
-use App\Models\UserHistory;
-use App\Models\TransactionHistory;
+// use App\Http\Controllers\ProfileController;
+// use App\Http\Controllers\InventoryController;
+// use App\Http\Controllers\ExcelController;
+// use App\Http\Controllers\MakeTransactionController;
+// use App\Http\Controllers\AddProductController;
+// use App\Http\Controllers\TransactionRecSectionController;
+// use App\Http\Controllers\TransactionController;
+// use App\Http\Controllers\InventoryProductController;
+// use App\Models\Product;
+// use App\Models\Transaction;
+// use App\Models\ProductHistory;
+// use App\Models\UserHistory;
+// use App\Models\TransactionHistory;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-Route::get('/debug-log', function () {
-    $path = storage_path('logs/laravel.log');
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
 
-    if (!file_exists($path)) {
-        return "NO LOG FILE FOUND at: $path";
-    }
-
-    $contents = @file_get_contents($path);
-    if ($contents === false) {
-        return "CANNOT READ LOG FILE — PERMISSION ERROR";
-    }
-
-    return nl2br($contents);
-});
-
-Route::get('/check-key', function() {
-    return env('APP_KEY') ?: 'no key found';
-});
-
-Route::middleware('web')->group(function () {
 Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
-    
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
-});
+    ->name('register');
+Route::post('register', [RegisteredUserController::class, 'store']);
+
+Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    ->name('login');
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+
+Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+    ->name('password.request');
+
+Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->name('password.email');
+
+Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->name('password.reset');
+
+Route::post('reset-password', [NewPasswordController::class, 'store'])
+    ->name('password.store');
 
 
 
