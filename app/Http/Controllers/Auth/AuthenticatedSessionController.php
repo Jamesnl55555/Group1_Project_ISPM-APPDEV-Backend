@@ -5,53 +5,52 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
-     */
-    public function create()
-    {
-        return response()->json([
-        'canResetPassword' => Route::has('password.request'),
-        'status' => session('status')
-        ]);
-    }
-
-    /**
-     * Handle an incoming authentication request.
+     * Handle SPA login.
      */
     public function store(LoginRequest $request)
     {
-        $request->authenticate();
+        // Run rate limiting
+        $request->ensureIsNotRateLimited();
 
-        $request->session()->regenerate();
+        // Find user by email
+        $user = User::where('email', $request->email)->first();
+
+        // Check password
+        if (!$user || !Hash::check($request->password, $request->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Invalid credentials'],
+            ]);
+        }
+
+        // Create Sanctum token
+        $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-        'success' => true,
-        'user' => Auth::user(),
-        'token' => $request->user()->createToken('api-token')->plainTextToken,
+            'success' => true,
+            'user' => $user,
+            'token' => $token,
         ]);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Logout (revoke current token)
      */
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+        }
 
         return response()->json([
-        'canResetPassword' => Route::has('password.request'),
-        'success' => true
+            'success' => true,
+            'message' => 'Logged out successfully',
         ]);
     }
 }

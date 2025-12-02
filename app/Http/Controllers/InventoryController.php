@@ -64,7 +64,6 @@ class InventoryController extends Controller
         
         //product number gets the current transaction number in the database
         $productnumber = Transaction::max('id') + 1;
-
         $user = $request->user();
         foreach($validatedData['cart'] as $item){
 
@@ -88,13 +87,22 @@ class InventoryController extends Controller
             'changed_data' => 'quantity decreased by ' . $item['quantity'],
         ]);
         }
-
-        Capital::create([
+        $isEmpty = Capital::count() === 0;
+        if(!$isEmpty){
+            Capital::update([
+            'amount' => Capital::latest()->first()->amount + array_sum(array_map(function($item) {
+                return $item['price'] * $item['quantity'];
+            }, $validatedData['cart'])),
+            'type' => 'income',
+            ]);
+        }else{
+            Capital::create([
             'amount' => array_sum(array_map(function($item) {
                 return $item['price'] * $item['quantity'];
             }, $validatedData['cart'])),
             'type' => 'income',
-        ]);
+            ]);
+        }
 
         return response()->json([
             'success' => true,
