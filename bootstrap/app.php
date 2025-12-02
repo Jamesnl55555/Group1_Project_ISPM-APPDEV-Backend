@@ -12,7 +12,26 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-       // CORS handler
+
+        // Make API stateful for Sanctum
+        $middleware->statefulApi();
+
+        // Sanctum must be FIRST in the web stack
+        $middleware->web(
+            prepend: [
+                \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            ],
+            append: [
+                \Illuminate\Cookie\Middleware\EncryptCookies::class,
+                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+                \Illuminate\Session\Middleware\StartSession::class,
+                \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+                \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+                \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            ]
+        );
+
+        // CORS handler
         $middleware->append([
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
@@ -22,7 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/*',
         ]);
     })
-
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
-    })->create();
+        // Custom exception handling if any
+    })
+    ->create();

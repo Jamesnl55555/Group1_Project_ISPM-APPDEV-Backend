@@ -15,13 +15,18 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages(['email' => ['Invalid credentials']]);
-        }
-
-        $request->session()->regenerate(); // Important!
-        return response()->json(['success' => true, 'user' => Auth::user()]);
+    $request->ensureIsNotRateLimited();
+    if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        throw ValidationException::withMessages([
+            'email' => ['Invalid credentials'],
+        ]);
     }
+
+    $request->session()->regenerate();
+
+    return response()->json(['success' => true, 'user' => Auth::user()]);
+    }
+
 
 
 

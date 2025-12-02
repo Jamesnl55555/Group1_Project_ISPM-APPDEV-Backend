@@ -16,8 +16,10 @@ use App\Http\Controllers\ExcelController;
 use App\Models\Capital;
 use App\Models\Product;
 use App\Models\Transaction;
+use GuzzleHttp\Middleware;
 
-
+Route::middleware('web')->group(function () {
+   
 Route::get('register', [RegisteredUserController::class, 'create'])
     ->name('register');
 Route::post('register', [RegisteredUserController::class, 'store']);
@@ -39,6 +41,7 @@ Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
 Route::post('reset-password', [NewPasswordController::class, 'store'])
     ->name('password.store');
 
+});
 
 
 Route::middleware('auth:sanctum')->group(function () {
