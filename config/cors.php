@@ -1,7 +1,14 @@
 <?php
 return [
 
-    'paths' => ['api/*', 'sanctum/*'],
+    'paths' => [
+    'api/*', 
+    'login',
+    'logout',
+    'register',
+    'forgot-password',
+    'reset-password',
+    'sanctum/*'],
 
     'allowed_methods' => ['*'],
 
