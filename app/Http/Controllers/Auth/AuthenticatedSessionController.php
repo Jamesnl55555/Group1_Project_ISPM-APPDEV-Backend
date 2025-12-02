@@ -1,49 +1,58 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Handle SPA login.
+/**
+     * Display the login view.
      */
-    public function store(LoginRequest $request)
+    public function create()
     {
-    $request->ensureIsNotRateLimited();
-    if (!Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
-        throw ValidationException::withMessages([
-            'email' => ['Invalid credentials'],
+        return response()->json([
+        'canResetPassword' => Route::has('password.request'),
+        'status' => session('status')
         ]);
     }
 
-    $request->session()->regenerate();
+    /**
+     * Handle an incoming authentication request.
 
-    return response()->json(['success' => true, 'user' => Auth::user()]);
+    */
+    public function store(LoginRequest $request)
+    {
+        $request->authenticate();
+
+        $request->session()->regenerate();
+
+        return response()->json([
+                'success' => true,
+                'user' => Auth::user(),
+                'token' => $request->user()->createToken('api-token')->plainTextToken,
+        ]);
     }
-
-
-
 
     /**
      * Logout (revoke current token)
-     */
+    */
     public function destroy(Request $request)
     {
-    Auth::guard('web')->logout();
+        Auth::guard('web')->logout();
 
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+        $request->session()->invalidate();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Logged out successfully',
-    ]);
+        $request->session()->regenerateToken();
+    
+
+        return response()->json([
+                'canResetPassword' => Route::has('password.request'),
+                'success' => true,
+                'message' => 'Logged out successfully',
+        ]);
     }
-
 }
