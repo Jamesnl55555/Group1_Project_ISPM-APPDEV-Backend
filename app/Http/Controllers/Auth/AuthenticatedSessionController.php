@@ -16,20 +16,17 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {
-        // Run rate limiting
         $request->ensureIsNotRateLimited();
 
-        // Find user by email
         $user = User::where('email', $request->email)->first();
 
-        // Check password
-        if (!$user || !Hash::check($request->password, $request->password)) {
+        // Correct password check
+        if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid credentials'],
             ]);
         }
 
-        // Create Sanctum token
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
@@ -38,6 +35,7 @@ class AuthenticatedSessionController extends Controller
             'token' => $token,
         ]);
     }
+
 
     /**
      * Logout (revoke current token)
