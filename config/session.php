@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'cookie'),
 
     /*
     |--------------------------------------------------------------------------
@@ -156,7 +156,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN', 'group1-project-ispm-appdev-backend.onrender.com'),
+    'domain' => env('SESSION_DOMAIN', '.group1-project-ispm-appdev-backend.onrender.com'),
 
     /*
     |--------------------------------------------------------------------------
