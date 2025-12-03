@@ -23,6 +23,12 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    public function validationData()
+    {
+        // Use JSON payload if available, otherwise fallback to form input
+        return $this->json()->all() ?: $this->all();
+    }
+    
     /**
      * Ensure the login request is not rate limited.
      *
