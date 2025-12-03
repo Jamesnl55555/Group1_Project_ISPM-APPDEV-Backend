@@ -8,7 +8,7 @@ return [
     'register',
     'forgot-password',
     'reset-password',
-    'sanctum/csrf-cookie'],
+    'sanctum/*'],
 
     'allowed_methods' => ['*'],
 
