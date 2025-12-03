@@ -33,7 +33,10 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 EXPOSE 80
 
 # Start Apache
-CMD php artisan migrate --force && \
-    php artisan config:clear && \
+CMD php artisan config:clear && \
     php artisan cache:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan migrate --force && \
     apache2-foreground
+
