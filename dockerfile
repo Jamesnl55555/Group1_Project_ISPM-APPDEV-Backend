@@ -19,7 +19,10 @@ COPY . .
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
+    
 # Set storage permissions (Render Free requires 777 for sessions/logs)
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
@@ -31,6 +34,5 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port
 EXPOSE 80
-
 
 CMD php artisan migrate --force && apache2-foreground && php artisan migrate:fresh
