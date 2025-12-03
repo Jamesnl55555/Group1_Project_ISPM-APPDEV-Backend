@@ -156,7 +156,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN', null),
+    'domain' => env('SESSION_DOMAIN', 'group1-project-ispm-appdev-backend.onrender.com'),
 
     /*
     |--------------------------------------------------------------------------
