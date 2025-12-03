@@ -21,6 +21,10 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 
+Route::middleware('web')->get('/sanctum/csrf-cookie', function () {
+    return response()->json(['csrf' => true]);
+});
+
 
 
 Route::middleware(['web'])->group(function () {
