@@ -15,7 +15,7 @@ return [
     |
     */
     
-        'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', 'ispmappdevfrontend.vercel.app')),
+        'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', '')),
 
 
 
