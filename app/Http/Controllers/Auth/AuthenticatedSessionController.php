@@ -6,7 +6,9 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -27,15 +29,30 @@ class AuthenticatedSessionController extends Controller
     */
      public function store(LoginRequest $request)
     {
-        $request->authenticate(); // validates credentials
+        $request->ensureIsNotRateLimited();
 
-        $request->session()->regenerate(); // regenerate session ID
+        $credentials = $request->only('email', 'password');
+        if (!Auth::attempt($credentials)) {
+             RateLimiter::hit($request->throttleKey());
+
+             throw ValidationException::withMessages([
+                 'email' => [trans('auth.failed')],
+             ]);
+        }
+
+        RateLimiter::clear($request->throttleKey());
+
+        $user = User::where('email', $request->email)->firstOrFail(); 
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
 
         return response()->json([
             'success' => true,
-            'user' => Auth::user(),
+            'user' => $user,
+            'token' => $token,
         ]);
-    }
+    }   
 
     /**
      * Logout (revoke current token)
