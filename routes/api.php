@@ -18,7 +18,10 @@ use App\Models\Product;
 use App\Models\Transaction;
 use GuzzleHttp\Middleware;
 
-
+Route::post('/register', [RegisteredUserController::class, 'store']);
+Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {

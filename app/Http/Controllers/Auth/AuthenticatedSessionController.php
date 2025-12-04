@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\HasApiTokens;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -41,11 +42,7 @@ class AuthenticatedSessionController extends Controller
     */
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
+        $request->user()->currentAccessToken()->delete();
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully',

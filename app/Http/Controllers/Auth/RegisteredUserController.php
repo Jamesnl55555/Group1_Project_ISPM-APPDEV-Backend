@@ -12,13 +12,6 @@ use Illuminate\Validation\Rules;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
-    // public function create()
-    // {
-    //     return Inertia::render('Auth/Register');
-    // }
 
     /**
      * Handle an incoming registration request.
@@ -43,14 +36,12 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
 
         $token = $user->createToken('auth-token')->plainTextToken;
         
         return response()->json([
             'success' => true,
             'user' => $user,
-            'absolute' => false,
             'token' => $token,
         ]);
     } 
