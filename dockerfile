@@ -21,6 +21,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 
+RUN composer require sendinblue/api-v3-sdk --no-interaction --optimize-autoloader
+
+
 # Set storage permissions (Render Free requires 777 for sessions/logs)
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
@@ -29,7 +32,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 
 # Copy Apache config (points to /public)
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
-
 # Expose port
 EXPOSE 80
 
