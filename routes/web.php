@@ -18,14 +18,8 @@ use Illuminate\Support\Facades\Route;
 // use Illuminate\Http\Request;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\NewPasswordController;
 use Illuminate\Support\Facades\Artisan;
 
-
-Route::post('/api/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-Route::post('/api/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
-Route::get('/api/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
 
 
 
