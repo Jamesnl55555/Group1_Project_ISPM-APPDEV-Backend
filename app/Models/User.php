@@ -8,23 +8,13 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Notifications\Notification;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable, HasApiTokens;
 
-    /**
-     * Relationships
-     */
-    public function products(): HasMany
-    {
-        return $this->hasMany(Product::class);
-    }
-
-    /**
-     * Mass assignable attributes
-     */
     protected $fillable = [
         'name',
         'email',
@@ -32,17 +22,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'capital',
     ];
 
-    /**
-     * Hidden attributes
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Casts
-     */
     protected function casts(): array
     {
         return [
@@ -51,11 +35,27 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
-    /**
-     * Override Laravel's default email verification notification
-     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    // Use custom verification notification
     public function sendEmailVerificationNotification()
     {
         $this->notify(new CustomVerifyEmail());
+    }
+
+    // Override default password reset notification
+    public function sendPasswordResetNotification($token)
+    {
+        $resetUrl = env('FRONTEND_URL') . "/reset-password?token=$token&email={$this->email}";
+
+        \App\Helpers\MailerSendHelper::sendEmail(
+            $this->email,
+            $this->name ?? 'User',
+            'Reset Your Password',
+            "Click the following link to reset your password:\n\n$resetUrl\n\nIf you did not request this, ignore this email."
+        );
     }
 }
