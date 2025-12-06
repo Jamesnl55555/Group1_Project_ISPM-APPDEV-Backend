@@ -17,6 +17,10 @@ use App\Models\Capital;
 use App\Models\Product;
 use App\Models\Transaction;
 use GuzzleHttp\Middleware;
+use App\Http\Controllers\Auth\PendingRegistrationController;
+
+Route::post('/register-pending', [PendingRegistrationController::class, 'store']);
+Route::get('/register/confirm', [PendingRegistrationController::class, 'confirm']);
 
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
