@@ -23,7 +23,6 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
-Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
 
 
 Route::middleware('auth:sanctum')->group(function () {
