@@ -5,47 +5,55 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use App\Helpers\MailerSendHelper;
 
 class PasswordResetLinkController extends Controller
 {
-    /**
-     * Display the password reset link request view.
-     */
-    public function create()
-    {
-        return response()->json([
-            'status' => session('status') ?? null,
-        ]);
-    }
-
-    /**
-     * Handle an incoming password reset link request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email'
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        // Check if user exists
+        $user = DB::table('users')->where('email', $request->email)->first();
 
-        if ($status == Password::RESET_LINK_SENT) {
+        if (!$user) {
             return response()->json([
-                'success' => true,
-                'message' => __($status),
+                'success' => true, // do NOT reveal that email does not exist
+                'message' => 'If your email exists, a reset link was sent.'
             ]);
         }
 
-        throw ValidationException::withMessages([
-            'email' => [trans($status)],
+        // Create reset token
+        $token = Str::random(64);
+
+        // Store token in password_reset_tokens table
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            [
+                'token' => $token,
+                'created_at' => Carbon::now()
+            ]
+        );
+
+        // Build reset link URL
+        $resetUrl = env('FRONTEND_URL') . "/reset-password?token=" . $token . "&email=" . $request->email;
+
+        // Send email using MailerSend API
+        MailerSendHelper::sendEmail(
+            $request->email,
+            $user->name ?? "User",
+            "Reset Your Password",
+            "Click the following link to reset your password:\n\n$resetUrl\n\nIf you did not request this, ignore this email."
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reset link sent!'
         ]);
     }
 }
