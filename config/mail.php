@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'mailersend'),
+    'default' => env('MAIL_MAILER', 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -49,8 +49,7 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
         'mailersend' => [
-        'transport' => 'mailersend',
-        'api_key' => env('MAILERSEND_API_KEY'),
+        'transport' => 'mailersend'
         ],
 
         'ses' => [
