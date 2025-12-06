@@ -33,7 +33,7 @@ class PendingRegistrationController extends Controller
         ]);
 
         // Generate SPA-friendly verification link
-        $verificationUrl = url("/verify?token={$token}");
+        $verificationUrl = url("/confirm-register/verify?token={$token}");
 
         // Send email using your MailerSendHelper
         $subject = 'Complete Your Registration';
