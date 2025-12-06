@@ -8,10 +8,10 @@ use Illuminate\Http\Request;
 class EmailVerificationPromptController extends Controller
 {
     /**
-     * Display the email verification prompt.
+     * Display the email verification prompt status.
      */
     public function __invoke(Request $request)
-    {  
+    {
         $user = $request->user();
         return response()->json([
             'success' => true,
