@@ -40,11 +40,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Product::class);
     }
 
-    // Use custom verification notification
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new CustomVerifyEmail());
-    }
 
     // Override default password reset notification
     public function sendPasswordResetNotification($token)
