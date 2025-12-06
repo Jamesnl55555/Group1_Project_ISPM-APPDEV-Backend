@@ -34,7 +34,7 @@ class PendingRegistrationController extends Controller
 
         // Generate SPA-friendly verification link (Vercel frontend)
         $frontendUrl = env('FRONTEND_URL'); // e.g., https://your-app.vercel.app
-        $verificationUrl = $frontendUrl . "/verify?token={$token}";
+        $verificationUrl = $frontendUrl . "/confirm-register?token={$token}";
 
         // Send email using MailerSend API
         $subject = 'Complete Your Registration';
