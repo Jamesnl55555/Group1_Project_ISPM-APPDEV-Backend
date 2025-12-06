@@ -42,5 +42,5 @@ RUN php artisan route:clear --env=production || true
 RUN php artisan view:clear --env=production || true
 
 # Run Apache
-#CMD php artisan migrate --force && 
-CMD apache2-foreground
+CMD php artisan migrate --force && apache2-foreground
+#CMD apache2-foreground
