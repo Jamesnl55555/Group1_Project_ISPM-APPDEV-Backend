@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
-use App\Helpers\MailerSendHelper;
+use Illuminate\Support\Facades\Http;
 
 class PendingRegistrationController extends Controller
 {
@@ -32,18 +32,33 @@ class PendingRegistrationController extends Controller
             'expires_at' => now()->addMinutes(60),
         ]);
 
-        // Generate SPA-friendly verification link
-        $verificationUrl = url("/confirm-register/verify?token={$token}");
+        // Generate SPA-friendly verification link (Vercel frontend)
+        $frontendUrl = env('FRONTEND_URL'); // e.g., https://your-app.vercel.app
+        $verificationUrl = $frontendUrl . "/verify?token={$token}";
 
-        // Send email using your MailerSendHelper
+        // Send email using MailerSend API
         $subject = 'Complete Your Registration';
-        $text = "Hi {$pending->name},<br><br>";
-        $text .= "<a href='{$verificationUrl}' style='display:inline-block;padding:10px 20px;background:#422912;color:white;border-radius:6px;text-decoration:none;'>Verify Email</a><br><br>";
+        $text = "Hi {$pending->name},\n\n";
+        $text .= "Click this link to complete your registration:\n";
+        $text .= "$verificationUrl\n\n";
         $text .= "If you did not register, ignore this email.";
 
-        $sent = MailerSendHelper::sendEmail($pending->email, $pending->name, $subject, $text);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('MAILERSEND_API_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.mailersend.com/v1/email', [
+            'from' => [
+                'email' => env('MAILERSEND_FROM_EMAIL'),
+                'name' => env('MAILERSEND_FROM_NAME'),
+            ],
+            'to' => [
+                ['email' => $pending->email, 'name' => $pending->name]
+            ],
+            'subject' => $subject,
+            'text' => $text, // plain text link
+        ]);
 
-        if (!$sent) {
+        if (!$response->successful()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send verification email. Please try again later.'
