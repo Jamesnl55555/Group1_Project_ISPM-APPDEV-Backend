@@ -37,7 +37,9 @@ class PendingRegistrationController extends Controller
 
         // Send email using your MailerSendHelper
         $subject = 'Complete Your Registration';
-        $text = "Hi {$pending->name},\n\nClick this link to complete your registration:\n$verificationUrl\n\nIf you did not register, ignore this email.";
+        $text = "Hi {$pending->name},<br><br>";
+        $text .= "<a href='{$verificationUrl}' style='display:inline-block;padding:10px 20px;background:#422912;color:white;border-radius:6px;text-decoration:none;'>Verify Email</a><br><br>";
+        $text .= "If you did not register, ignore this email.";
 
         $sent = MailerSendHelper::sendEmail($pending->email, $pending->name, $subject, $text);
 
