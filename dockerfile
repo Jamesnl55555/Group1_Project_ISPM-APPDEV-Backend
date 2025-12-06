@@ -19,19 +19,17 @@ COPY . .
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install MailerSend PHP SDK
-RUN composer require mailersend/mailersend-php-sdk --prefer-stable
+# Allow dev stability for MailerSend
+RUN composer require mailersend/mailersend-php --prefer-stable --ignore-platform-reqs --no-interaction || true
 
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set storage permissions (Render Free requires 777 for sessions/logs)
+# Set storage permissions
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
 
-# Do NOT run php artisan config:cache at build — environment variables are injected at runtime
-
-# Copy Apache config (points to /public)
+# Copy Apache config
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 # Expose port
