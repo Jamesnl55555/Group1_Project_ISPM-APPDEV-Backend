@@ -1,7 +1,7 @@
 # Laravel SPA Backend Dockerfile for Render Free
 FROM php:8.3-apache
 
-# Install PHP extensions and dependencies
+# Install PHP extensions and system dependencies
 RUN apt-get update && apt-get install -y \
     unzip git libpq-dev libzip-dev libonig-dev libpng-dev libjpeg-dev libfreetype6-dev \
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -13,29 +13,28 @@ RUN a2enmod rewrite headers
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy Laravel app
+# Copy Laravel application
 COPY . .
 
-# Install Composer
+# Install Composer (from composer official image)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Install PHP dependencies WITHOUT caching config
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-
-# Set storage permissions (Render Free requires 777 for sessions/logs)
+# Fix permissions
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
 
-# Do NOT run php artisan config:cache at build — environment variables are injected at runtime
-
-# Copy Apache config (points to /public)
+# Copy Apache config
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
-# Expose port
+
+# IMPORTANT — NO artisan commands before environment variables exist
+# (Render injects envs only at runtime)
+
 EXPOSE 80
 
-RUN php artisan cache:clear --env=production --database=pgsql || true
-RUN php artisan config:clear --env=production || true
-RUN php artisan route:clear --env=production || true
-RUN php artisan view:clear --env=production || true
-
+# Run migrations at runtime (optional)
 # CMD php artisan migrate --force && apache2-foreground
+
 CMD apache2-foreground
