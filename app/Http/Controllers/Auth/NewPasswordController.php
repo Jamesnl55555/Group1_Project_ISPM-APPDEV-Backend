@@ -31,33 +31,41 @@ class NewPasswordController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+    ]);
 
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user) use ($request) {
-                $user->forceFill([
-                    'password' => Hash::make($request->password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($user) use ($request) {
+            $user->forceFill([
+                'password' => Hash::make($request->password),
+                'remember_token' => Str::random(60),
+            ])->save();
 
-                event(new PasswordReset($user));
-            }
-        );
-
-        if ($status == Password::PASSWORD_RESET) {
-            return response()->json([
-                'success' => true,
-                'message' => __($status),
-            ]);
+            event(new PasswordReset($user));
         }
+    );
 
-        throw ValidationException::withMessages([
-            'email' => [trans($status)],
+    if ($status == Password::PASSWORD_RESET) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Password successfully reset!',
         ]);
+    }
+
+    // Handle invalid or expired token
+    if ($status == Password::INVALID_TOKEN) {
+        throw ValidationException::withMessages([
+            'token' => ['The password reset token is invalid or has expired.'],
+        ]);
+    }
+
+    // Fallback for other errors
+    throw ValidationException::withMessages([
+        'email' => [trans($status)],
+    ]);
     }
 }
