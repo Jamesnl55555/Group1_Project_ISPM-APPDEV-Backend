@@ -19,8 +19,8 @@ COPY . .
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install MailerSend PHP SDK
-RUN composer require mailersend/mailersend-php
+# Install MailerSend PHP SDK (use --prefer-stable for Render Free)
+RUN composer require mailersend/mailersend-php --prefer-stable
 
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
@@ -37,11 +37,11 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 # Expose port
 EXPOSE 80
 
-# Clear Laravel caches (optional)
+# Clear Laravel caches at build time
 RUN php artisan cache:clear --env=production --database=pgsql || true
 RUN php artisan config:clear --env=production || true
 RUN php artisan route:clear --env=production || true
 RUN php artisan view:clear --env=production || true
 
-# Start Apache in foreground
+# Run Apache in foreground
 CMD apache2-foreground
