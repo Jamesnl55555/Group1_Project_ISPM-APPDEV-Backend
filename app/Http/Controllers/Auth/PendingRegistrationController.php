@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers\Auth;
 
@@ -7,9 +7,9 @@ use App\Models\PendingRegistration;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
+use App\Helpers\MailerSendHelper;
 
 class PendingRegistrationController extends Controller
 {
@@ -32,27 +32,21 @@ class PendingRegistrationController extends Controller
             'expires_at' => now()->addMinutes(60),
         ]);
 
+        // Generate SPA-friendly verification link
         $verificationUrl = url("/verify?token={$token}");
 
+        // Send email using your MailerSendHelper
+        $subject = 'Complete Your Registration';
+        $text = "Hi {$pending->name},\n\nClick this link to complete your registration:\n$verificationUrl\n\nIf you did not register, ignore this email.";
 
-        // Send email via MailerSend
-        Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('MAILERSEND_API_KEY'),
-            'Content-Type' => 'application/json',
-        ])->post('https://api.mailersend.com/v1/email', [
-            'from' => [
-                'email' => env('MAIL_FROM_ADDRESS'),
-                'name' => env('MAIL_FROM_NAME'),
-            ],
-            'to' => [
-                [
-                    'email' => $pending->email,
-                    'name' => $pending->name,
-                ]
-            ],
-            'subject' => 'Complete Your Registration',
-            'text' => "Click to complete registration: $verificationUrl",
-        ]);
+        $sent = MailerSendHelper::sendEmail($pending->email, $pending->name, $subject, $text);
+
+        if (!$sent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email. Please try again later.'
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -81,7 +75,7 @@ class PendingRegistrationController extends Controller
         // Delete pending registration
         $pending->delete();
 
-        // Create login token for auto-login
+        // Create login token for SPA auto-login
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
