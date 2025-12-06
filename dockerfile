@@ -19,25 +19,29 @@ COPY . .
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 🟢 Install Resend PHP SDK
-RUN composer require resend/resend-php
+# Install MailerSend PHP SDK
+RUN composer require mailersend/mailersend-php
 
-# Install project dependencies
+# Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Set storage permissions for Render Free
+# Set storage permissions (Render Free requires 777 for sessions/logs)
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
 
-# Apache config
+# Do NOT run php artisan config:cache at build — environment variables are injected at runtime
+
+# Copy Apache config (points to /public)
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
+# Expose port
 EXPOSE 80
 
-# Clear caches
-RUN php artisan cache:clear || true
-RUN php artisan config:clear || true
-RUN php artisan route:clear || true
-RUN php artisan view:clear || true
+# Clear Laravel caches (optional)
+RUN php artisan cache:clear --env=production --database=pgsql || true
+RUN php artisan config:clear --env=production || true
+RUN php artisan route:clear --env=production || true
+RUN php artisan view:clear --env=production || true
 
+# Start Apache in foreground
 CMD apache2-foreground

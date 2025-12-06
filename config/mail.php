@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'sendinblue'),
+    'default' => env('MAIL_MAILER', 'mailersend'),
 
     /*
     |--------------------------------------------------------------------------
@@ -48,9 +48,9 @@ return [
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
-        'sendinblue' => [
-            'transport' => 'sendinblue',
-            'api_key' => env('BREVO_API_KEY'),
+        'mailersend' => [
+        'transport' => 'mailersend',
+        'api_key' => env('MAILERSEND_API_KEY'),
         ],
 
         'ses' => [
