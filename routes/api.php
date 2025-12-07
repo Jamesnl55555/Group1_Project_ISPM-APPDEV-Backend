@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     return $request->user();
     })->name('user');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
-    
+    Route::put('/archive-item', [InventoryController::class, 'archiveItem'])->name('archive-item');
     Route::get('/fetchproducts', function () {
     $products = Product::latest()->take(10)->get();
         return response()->json([

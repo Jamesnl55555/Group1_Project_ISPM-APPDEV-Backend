@@ -10,9 +10,33 @@ use App\Models\TransactionHistory;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class InventoryController extends Controller
 {
+    public function archiveItem(Request $request)
+    {
+        $validatedData = $request->validate([
+            'id' => 'required|integer',
+            'is_archived' => 'required|integer',
+        ]);
+
+        $item = Product::findOrFail($validatedData['id']);
+        $item->is_archived = true;
+        $item->save();
+
+        ProductHistory::create([
+            'product_name' => $item->name,
+            'action' => 'archived product',
+            'changed_data' => "false => true",
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item archive status updated successfully.',
+        ]);
+    }
+
     public function addItem(Request $request){
         $validatedData = request()->validate([
             'name' => 'required|string|max:255',
@@ -227,14 +251,14 @@ class InventoryController extends Controller
         ]);
     }
     
-    public function deleteItem($id)
+    public function deleteItem(Request $request)
     {
-    $product = Product::findOrFail($id);    
+    $product = Product::findOrFail($request);    
     ProductHistory::create([
-            'product_name' => $product->name,
-            'action' => 'deleted product',
-            'changed_data' => 'deleted ' . $product->name,
-        ]);
+        'product_name' => $product->name,
+        'action' => 'deleted product',
+        'changed_data' => 'deleted ' . $product->name,
+    ]);
     
     $product->delete();
 
