@@ -14,6 +14,24 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class InventoryController extends Controller
 {
+    public function unarchiveItem($id)
+    {
+    $item = Product::findOrFail($id);
+    $item->is_archived = 0;
+    $item->save();
+
+    ProductHistory::create([
+        'product_name' => $item->name,
+        'action' => 'restored product',
+        'changed_data' => "true => false",
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Product restored successfully.',
+    ]);
+    }
+
     public function archiveItem(Request $request, $id)
     {
     $item = Product::findOrFail($id);

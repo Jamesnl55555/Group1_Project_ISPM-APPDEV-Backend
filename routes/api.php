@@ -90,7 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('update-product');
     Route::post('/delete-item/{id}', [InventoryController::class, 'deleteItem'])->name('delete-item');
     Route::post('/checkout', [InventoryController::class, 'checkout'])->name('checkout');
-    
+    Route::post('/unarchive/{id}', [InventoryController::class, 'unarchiveItem']);
     Route::get('/email/verify-status', function (Request $request) {
         return response()->json([
             'verified' => $request->user()->hasVerifiedEmail(),
