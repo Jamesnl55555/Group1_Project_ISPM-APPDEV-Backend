@@ -36,12 +36,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
     
     Route::get('/fetchproducts', function () {
-    $products = Product::latest()->take(10)->get();
-        return response()->json([
-            'success' => true,
-            'products' => $products ?: [],
-        ]);
+
+    $products = Product::orderBy('id', 'desc')->paginate(10);
+
+    return response()->json([
+        'success' => true,
+        'products' => $products->items(),
+        'current_page' => $products->currentPage(),
+        'last_page' => $products->lastPage(),
+    ]);
     })->name('fetchproducts');
+
 
     Route::get('/fetchproduct/{id}', function ($id) {
     $product = Product::find($id); // fetch single product by ID
