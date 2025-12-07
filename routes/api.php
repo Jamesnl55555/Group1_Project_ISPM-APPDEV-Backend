@@ -42,6 +42,21 @@ Route::middleware('auth:sanctum')->group(function () {
             'products' => $products ?: [],
         ]);
     })->name('fetchproducts');
+
+    Route::get('/fetchproduct/{id}', function ($id) {
+    $product = Product::find($id); // get a single product
+    if (!$product) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Product not found'
+        ], 404);
+    }
+    return response()->json([
+        'success' => true,
+        'product' => $product
+    ]);
+    });
+
     
     Route::get('/fetchtransactions', function () {
     $transactions = Transaction::latest()->take(10)->get();
