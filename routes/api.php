@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     return $request->user();
     })->name('user');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
-    Route::post('/archive-item/{id}', [InventoryController::class, 'archiveItem'])->name('archive-item');
+    
     Route::get('/fetchproducts', function () {
     $products = Product::latest()->take(10)->get();
         return response()->json([
@@ -44,19 +44,21 @@ Route::middleware('auth:sanctum')->group(function () {
     })->name('fetchproducts');
 
     Route::get('/fetchproduct/{id}', function ($id) {
-    $product = Product::find($id); // get a single product
+    $product = Product::find($id); // fetch single product by ID
     if (!$product) {
         return response()->json([
             'success' => false,
             'message' => 'Product not found'
         ], 404);
     }
+    
     return response()->json([
         'success' => true,
         'product' => $product
     ]);
-    });
-
+    })->name('fetchproduct');
+    
+    Route::post('/archive-item/{id}', [InventoryController::class, 'archiveItem'])->name('archive-product');   
     
     Route::get('/fetchtransactions', function () {
     $transactions = Transaction::latest()->take(10)->get();
