@@ -73,7 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 
-
+    Route::get('/latest-transaction', [InventoryController::class, 'fetchLatestTransaction'])->name('latest-transaction');
 
     Route::get('/fetchproduct/{id}', function ($id) {
     $product = Product::find($id); // fetch single product by ID

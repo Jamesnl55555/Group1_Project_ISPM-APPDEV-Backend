@@ -14,6 +14,7 @@ class Transaction extends Model
     protected $fillable = [
         'user_name',
         'product_number',
+        'variety_of_items',
         'product_name',
         'quantity', 
         'price',

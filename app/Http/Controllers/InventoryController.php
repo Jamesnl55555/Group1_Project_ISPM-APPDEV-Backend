@@ -89,7 +89,7 @@ class InventoryController extends Controller
 
     
     public function checkout(Request $request)
-    {
+{
     $validatedData = $request->validate([
         'cart' => 'required|array',
         'cart.*.id' => 'required|integer',
@@ -98,18 +98,26 @@ class InventoryController extends Controller
         'cart.*.price' => 'required|numeric',
     ]);
 
-    $productnumber = Transaction::max('id') + 1;
+    $productNumber = Transaction::max('product_number') + 1; // unique for this checkout
     $user = $request->user();
 
+    $cartTotal = 0;
+
+    // Count number of unique products
+    $varietyOfItems = count($validatedData['cart']);
+
     foreach ($validatedData['cart'] as $item) {
+        $totalAmount = $item['price'] * $item['quantity'];
+        $cartTotal += $totalAmount;
 
         Transaction::create([
             'user_name' => $user->name,
-            'product_number' => $productnumber,
+            'product_number' => $productNumber,
             'product_name' => $item['name'],
             'quantity' => $item['quantity'],
             'price' => $item['price'],
-            'total_amount' => $item['price'] * $item['quantity']
+            'total_amount' => $totalAmount,
+            'variety_of_items' => $varietyOfItems, // store variety here
         ]);
 
         $product = Product::find($item['id']);
@@ -123,18 +131,13 @@ class InventoryController extends Controller
         ]);
     }
 
-    $cartTotal = array_sum(array_map(function ($item) {
-        return $item['price'] * $item['quantity'];
-    }, $validatedData['cart']));
-
+    // Update Capital
     $today = now()->toDateString();
-
     $capital = Capital::firstOrNew(
         ['created_at' => now()->startOfDay()],
         ['amount' => 0, 'type' => 'income']
     );
 
-    // Add today's checkout total
     $capital->amount += $cartTotal;
     $capital->type = 'income';
     $capital->save();
@@ -142,10 +145,24 @@ class InventoryController extends Controller
     return response()->json([
         'success' => true,
         'message' => 'Checkout completed successfully.',
+        'transaction_number' => $productNumber,
     ]);
+}
+
+
+    public function fetchLatestTransaction(){
+        $latestTransaction = Transaction::orderBy('created_at', 'desc')->first();
+        if (!$latestTransaction) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No transactions found.'
+            ], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'transaction' => $latestTransaction
+        ]);
     }
-
-
 
     public function updateItemInc($id)
     {
