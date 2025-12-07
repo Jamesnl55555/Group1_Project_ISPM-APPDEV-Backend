@@ -14,28 +14,24 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class InventoryController extends Controller
 {
-    public function archiveItem(Request $request)
+    public function archiveItem(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'id' => 'required|integer',
-            'is_archived' => 'required|integer',
-        ]);
+    $item = Product::findOrFail($id);
+    $item->is_archived = true;
+    $item->save();
 
-        $item = Product::findOrFail($validatedData['id']);
-        $item->is_archived = true;
-        $item->save();
+    ProductHistory::create([
+        'product_name' => $item->name,
+        'action' => 'archived product',
+        'changed_data' => "false => true",
+    ]);
 
-        ProductHistory::create([
-            'product_name' => $item->name,
-            'action' => 'archived product',
-            'changed_data' => "false => true",
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Item archive status updated successfully.',
-        ]);
+    return response()->json([
+        'success' => true,
+        'message' => 'Item archive status updated successfully.',
+    ]);
     }
+
 
     public function addItem(Request $request){
         $validatedData = request()->validate([
@@ -250,23 +246,24 @@ class InventoryController extends Controller
         ]);
     }
     
-    public function deleteItem(Request $request)
+    public function deleteItem(Request $request, $id)
     {
-    $product = Product::findOrFail($request);    
+    $product = Product::findOrFail($id);  
+
     ProductHistory::create([
         'product_name' => $product->name,
         'action' => 'deleted product',
         'changed_data' => 'deleted ' . $product->name,
     ]);
-    
+
     $product->delete();
 
     return response()->json([
         'success' => true,
         'message' => 'Product deleted successfully.',
     ]);
-
     }
+
 
 
     public function deletePHistory($id)
