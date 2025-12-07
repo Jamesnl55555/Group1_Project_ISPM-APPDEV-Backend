@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\SalesReportController;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -82,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/latest-transaction', [InventoryController::class, 'fetchLatestTransaction'])->name('latest-transaction');
+    
 
     Route::get('/fetchproduct/{id}', function (Request $request, $id) {
     $user = $request->user();
@@ -167,6 +169,12 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::post('/confirm-password', 
         [ConfirmablePasswordController::class, 'store']
     );
+
+    Route::get('/fetch-daily', [SalesReportController::class, 'fetchDaily']);
+    Route::get('/fetch-weekly', [SalesReportController::class, 'fetchWeekly']);
+    Route::get('/fetch-monthly', [SalesReportController::class, 'fetchMonthly']);
+    Route::get('/fetch-custom', [SalesReportController::class, 'fetchCustom']);
+
 
     Route::put('/password', 
         [PasswordController::class, 'update']
