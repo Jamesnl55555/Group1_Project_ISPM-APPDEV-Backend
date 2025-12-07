@@ -87,6 +87,7 @@ class InventoryController extends Controller
         ]);
     }
 
+    
     public function checkout(Request $request)
     {
     $validatedData = $request->validate([
@@ -100,7 +101,7 @@ class InventoryController extends Controller
     $productnumber = Transaction::max('id') + 1;
     $user = $request->user();
 
-    foreach($validatedData['cart'] as $item){
+    foreach ($validatedData['cart'] as $item) {
 
         Transaction::create([
             'user_name' => $user->name,
@@ -122,30 +123,29 @@ class InventoryController extends Controller
         ]);
     }
 
-    $cartTotal = array_sum(array_map(function($item) {
+    $cartTotal = array_sum(array_map(function ($item) {
         return $item['price'] * $item['quantity'];
     }, $validatedData['cart']));
 
-    if (Capital::count() > 0) {
-        $latestCapital = Capital::latest()->first();
+    $today = now()->toDateString();
 
-        $latestCapital->update([
-            'amount' => $latestCapital->amount + $cartTotal,
-            'type' => 'income',
-        ]);
+    $capital = Capital::firstOrNew(
+        ['created_at' => now()->startOfDay()],
+        ['amount' => 0, 'type' => 'income']
+    );
 
-    } else {
-        Capital::create([
-            'amount' => $cartTotal,
-            'type' => 'income',
-        ]);
-    }
+    // Add today's checkout total
+    $capital->amount += $cartTotal;
+    $capital->type = 'income';
+    $capital->save();
 
     return response()->json([
         'success' => true,
         'message' => 'Checkout completed successfully.',
     ]);
     }
+
+
 
     public function updateItemInc($id)
     {
