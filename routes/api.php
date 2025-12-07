@@ -36,16 +36,43 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
     
     Route::get('/fetchproducts', function () {
-
-    $products = Product::orderBy('id', 'desc')->paginate(10);
+    $products = Product::where('is_archived', 0)
+        ->orderBy('id', 'desc')
+        ->paginate(10);
 
     return response()->json([
-        'success' => true,
         'products' => $products->items(),
         'current_page' => $products->currentPage(),
         'last_page' => $products->lastPage(),
     ]);
-    })->name('fetchproducts');
+    });
+
+    Route::get('/fetchproducts-lowstock', function () {
+    $products = Product::where('is_archived', 0)
+        ->where('quantity', '<=', 20)
+        ->orderBy('id', 'desc')
+        ->paginate(10);
+
+    return response()->json([
+        'products' => $products->items(),
+        'current_page' => $products->currentPage(),
+        'last_page' => $products->lastPage(),
+    ]);
+    });
+
+    Route::get('/fetchproducts-archived', function () {
+    $products = Product::where('is_archived', 1)
+        ->orderBy('id', 'desc')
+        ->paginate(10);
+
+    return response()->json([
+        'products' => $products->items(),
+        'current_page' => $products->currentPage(),
+        'last_page' => $products->lastPage(),
+    ]);
+    });
+
+
 
 
     Route::get('/fetchproduct/{id}', function ($id) {
