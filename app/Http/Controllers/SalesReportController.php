@@ -15,7 +15,7 @@ class SalesReportController extends Controller
 
         $dailySales = Transaction::where('user_id', $user->id)
             ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_amount')
-            ->groupBy(DB::raw('DATE(created_at)'))
+            ->groupBy('date')
             ->orderBy('date', 'desc')
             ->get()
             ->map(function ($item) use ($user) {
@@ -26,13 +26,6 @@ class SalesReportController extends Controller
                     'amount' => $item->total_amount,
                 ];
             });
-
-        if ($dailySales->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No daily sales records found.',
-            ], 404);
-        }
 
         return response()->json([
             'success' => true,
@@ -46,12 +39,14 @@ class SalesReportController extends Controller
 
         $weeklySales = Transaction::where('user_id', $user->id)
             ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as total_amount')
-            ->groupBy(DB::raw('YEARWEEK(created_at, 1)'))
+            ->groupBy('year_week')
             ->orderBy('year_week', 'desc')
             ->get()
             ->map(function ($item) use ($user) {
                 $year = substr($item->year_week, 0, 4);
                 $week = substr($item->year_week, 4, 2);
+
+                // Use Carbon to get start and end of ISO week
                 $startDate = Carbon::now()->setISODate($year, $week)->startOfWeek();
                 $endDate   = Carbon::now()->setISODate($year, $week)->endOfWeek();
 
@@ -63,13 +58,6 @@ class SalesReportController extends Controller
                     'amount'     => $item->total_amount,
                 ];
             });
-
-        if ($weeklySales->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No weekly sales records found.',
-            ], 404);
-        }
 
         return response()->json([
             'success' => true,
@@ -83,7 +71,7 @@ class SalesReportController extends Controller
 
         $monthlySales = Transaction::where('user_id', $user->id)
             ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(total_amount) as total_amount')
-            ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
+            ->groupBy('month')
             ->orderBy('month', 'desc')
             ->get()
             ->map(function ($item) use ($user) {
@@ -95,13 +83,6 @@ class SalesReportController extends Controller
                 ];
             });
 
-        if ($monthlySales->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No monthly sales records found.',
-            ], 404);
-        }
-
         return response()->json([
             'success' => true,
             'monthly_sales' => $monthlySales,
@@ -111,7 +92,6 @@ class SalesReportController extends Controller
     public function fetchCustom(Request $request)
     {
         $user = $request->user();
-
         $from = $request->query('from');
         $to   = $request->query('to');
 
@@ -126,13 +106,6 @@ class SalesReportController extends Controller
             ->whereDate('created_at', '>=', $from)
             ->whereDate('created_at', '<=', $to)
             ->sum('total_amount');
-
-        if ($totalAmount == 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No sales found for the selected date range.',
-            ], 404);
-        }
 
         return response()->json([
             'success' => true,
