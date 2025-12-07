@@ -14,6 +14,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable, HasApiTokens;
+    public function capitals(): HasMany
+    {
+        return $this->hasMany(Capital::class);
+    }
+
+    public function product_histories(): HasMany
+    {
+        return $this->hasMany(ProductHistory::class);
+    }
+    public function transaction_histories(): HasMany
+    {
+        return $this->hasMany(TransactionHistory::class);
+    }
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
 
     protected $fillable = [
         'name',

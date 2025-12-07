@@ -35,8 +35,11 @@ Route::middleware('auth:sanctum')->group(function () {
     })->name('user');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
     
-    Route::get('/fetchproducts', function () {
-    $products = Product::where('is_archived', 0)
+    Route::get('/fetchproducts', function (Request $request) {
+    $user = $request->user();
+
+    $products = Product::where('user_id', $user->id) // only the current user's products
+        ->where('is_archived', 0)
         ->orderBy('id', 'desc')
         ->paginate(10);
 
@@ -47,8 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
     });
 
-    Route::get('/fetchproducts-lowstock', function () {
-    $products = Product::where('is_archived', 0)
+    Route::get('/fetchproducts-lowstock', function (Request $request) {
+    $user = $request->user();
+
+    $products = Product::where('user_id', $user->id) // only the current user's products
+        ->where('is_archived', 0)
         ->where('quantity', '<=', 20)
         ->orderBy('id', 'desc')
         ->paginate(10);
@@ -60,8 +66,10 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
     });
 
-    Route::get('/fetchproducts-archived', function () {
-    $products = Product::where('is_archived', 1)
+    Route::get('/fetchproducts-archived', function (Request $request) {
+    $user = $request->user();
+    $products = Product::where('user_id', $user->id)
+        ->where('is_archived', 1)
         ->orderBy('id', 'desc')
         ->paginate(10);
 
@@ -75,8 +83,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/latest-transaction', [InventoryController::class, 'fetchLatestTransaction'])->name('latest-transaction');
 
-    Route::get('/fetchproduct/{id}', function ($id) {
-    $product = Product::find($id); // fetch single product by ID
+    Route::get('/fetchproduct/{id}', function (Request $request, $id) {
+    $user = $request->user();
+
+    $product = Product::where('id', $id)
+                      ->where('user_id', $user->id)
+                      ->first();
     if (!$product) {
         return response()->json([
             'success' => false,
@@ -92,29 +104,42 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::post('/archive-item/{id}', [InventoryController::class, 'archiveItem'])->name('archive-product');   
     
-    Route::get('/fetchtransactions', function () {
-    $transactions = Transaction::latest()->take(10)->get();
-        return response()->json([
-            'success' => true,
-            'transactions' => $transactions ?: [],
-        ]);
+    Route::get('/fetchtransactions', function (Request $request) {
+    $user = $request->user(); // get the authenticated user
+
+    $transactions = Transaction::where('user_name', $user->name) // filter by user
+        ->latest()
+        ->take(10)
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'transactions' => $transactions ?: [],
+    ]);
     })->name('fetchtransactions');
 
-    Route::get('/fetchcapital', function () {
-        try {
-        $capitals = Capital::latest()->take(10)->get();
+    Route::get('/fetchcapital', function (Request $request) {
+    try {
+        $user = $request->user();
+
+        $capitals = Capital::where('user_id', $user->id) // filter by authenticated user
+            ->latest()
+            ->take(10)
+            ->get();
+
         return response()->json([
             'success' => true,
             'capitals' => $capitals,
         ]);
-        }catch (\Exception $e) {
+    } catch (\Exception $e) {
         Log::error('FetchCapital error: '.$e->getMessage());
+
         return response()->json([
             'success' => false,
             'message' => 'Failed to fetch capitals',
             'capitals' => [],
         ], 500);
-        }
+    }
     })->name('fetchcapital');
     
     Route::post('/import', [ExcelController::class, 'import'])->name('import');
