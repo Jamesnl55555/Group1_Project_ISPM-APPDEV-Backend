@@ -73,65 +73,64 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function checkout(Request $request){
-        
-        Log::info('Incoming request raw:', [$request->getContent()]);
-        Log::info('Incoming request:', $request->all());
+    public function checkout(Request $request)
+    {
+    $validatedData = $request->validate([
+        'cart' => 'required|array',
+        'cart.*.id' => 'required|integer',
+        'cart.*.name' => 'required|string',
+        'cart.*.quantity' => 'required|integer',
+        'cart.*.price' => 'required|numeric',
+    ]);
 
-        $validatedData = $request->validate([
-            'cart' => 'required|array',
-            'cart.*.id' => 'required|integer',
-            'cart.*.name' => 'required|string',
-            'cart.*.quantity' => 'required|integer',
-            'cart.*.price' => 'required|numeric',
+    $productnumber = Transaction::max('id') + 1;
+    $user = $request->user();
+
+    foreach($validatedData['cart'] as $item){
+
+        Transaction::create([
+            'user_name' => $user->name,
+            'product_number' => $productnumber,
+            'product_name' => $item['name'],
+            'quantity' => $item['quantity'],
+            'price' => $item['price'],
+            'total_amount' => $item['price'] * $item['quantity']
         ]);
-        
-        //product number gets the current transaction number in the database
-        $productnumber = Transaction::max('id') + 1;
-        $user = $request->user();
-        foreach($validatedData['cart'] as $item){
 
-            Transaction::create([
-                'user_name' => $user->name,
-                'product_number' => $productnumber,
-                'product_name' => $item['name'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'total_amount' => $item['price'] * $item['quantity']
-            ]);
+        $product = Product::find($item['id']);
+        $product->quantity -= $item['quantity'];
+        $product->save();
 
-            $product = Product::find($item['id']);
-            $i = $product->quantity - $item['quantity'];
-            $product->quantity = $i;
-            $product->save();
-
-            ProductHistory::create([
+        ProductHistory::create([
             'product_name' => $item['name'],
             'action' => 'quantity decreased',
             'changed_data' => 'quantity decreased by ' . $item['quantity'],
         ]);
-        }
-        $isEmpty = Capital::count() === 0;
-        if(!$isEmpty){
-            Capital::update([
-            'amount' => Capital::latest()->first()->amount + array_sum(array_map(function($item) {
-                return $item['price'] * $item['quantity'];
-            }, $validatedData['cart'])),
-            'type' => 'income',
-            ]);
-        }else{
-            Capital::create([
-            'amount' => array_sum(array_map(function($item) {
-                return $item['price'] * $item['quantity'];
-            }, $validatedData['cart'])),
-            'type' => 'income',
-            ]);
-        }
+    }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Checkout completed successfully.',
+    $cartTotal = array_sum(array_map(function($item) {
+        return $item['price'] * $item['quantity'];
+    }, $validatedData['cart']));
+
+    if (Capital::count() > 0) {
+        $latestCapital = Capital::latest()->first();
+
+        $latestCapital->update([
+            'amount' => $latestCapital->amount + $cartTotal,
+            'type' => 'income',
         ]);
+
+    } else {
+        Capital::create([
+            'amount' => $cartTotal,
+            'type' => 'income',
+        ]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Checkout completed successfully.',
+    ]);
     }
 
     public function updateItemInc($id)
