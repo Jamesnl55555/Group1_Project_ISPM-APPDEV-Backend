@@ -73,34 +73,33 @@ class SalesReportController extends Controller
 
 
     
-    public function fetchMonthly(Request $request)
+   public function fetchMonthly(Request $request)
     {
-    $user = $request->user();
-    Log::info('Fetching monthly sales for user', ['user_id' => $user->id]);
-
-    $monthly_sales = Transaction::where('user_id', $user->id)
-        ->select(
+    $user = $request->user(); // authenticated user
+    Log::info('Current user', ['user' => $user]);
+    $monthly_sales = Transaction::select(
             DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+            DB::raw("user_name as user"),
             DB::raw("SUM(total_amount) as amount")
         )
-        ->groupBy('month')
-        ->orderByDesc('month')
-        ->get()
-        ->map(function ($item) use ($user) {
-            $monthName = date("F Y", strtotime($item->month));
-            return [
-                'month' => $monthName,
-                'user' => $user->name,
-                'amount' => $item->amount,
-            ];
-        });
+        ->groupBy('month', 'user')
+        ->orderBy('month', 'desc')
+        ->get();
+
+    // Format data for frontend
+    $monthly_sales = $monthly_sales->map(function ($item) {
+        return [
+            'month' => $item->month,
+            'user' => $item->user,
+            'amount' => $item->amount,
+        ];
+    });
 
     return response()->json([
         'success' => true,
         'monthly_sales' => $monthly_sales,
     ]);
     }
-
     public function fetchCustom(Request $request)
     {
         $user = $request->user();
