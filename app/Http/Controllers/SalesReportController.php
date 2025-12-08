@@ -43,12 +43,15 @@ public function fetchWeekly(Request $request)
         ->orderBy('year_week', 'desc')
         ->get();
 
+    // Log raw query results to debug
+    Log::info('WeeklySales Raw:', $weeklySales->toArray());
+
     $weeklySales = $weeklySales->map(function ($item) use ($user) {
         $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
         $year = (int) substr($yearWeek, 0, 4);
         $week = (int) substr($yearWeek, 4, 2);
 
-        // Use createFromISODate instead of now()
+        // Use createFromISODate instead of now()->setISODate()
         $startDate = Carbon::createFromISODate($year, $week)->startOfWeek();
         $endDate   = Carbon::createFromISODate($year, $week)->endOfWeek();
 
@@ -66,6 +69,7 @@ public function fetchWeekly(Request $request)
         'weekly_sales' => $weeklySales,
     ]);
 }
+
 
     public function fetchMonthly(Request $request)
     {
