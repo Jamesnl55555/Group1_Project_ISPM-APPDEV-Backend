@@ -13,7 +13,7 @@ class SalesReportController extends Controller
     {
         $user = $request->user();
         Log::info('Current user', ['user' => $user]);
-        $dailySales = Transaction::where('user_id', $user->id)
+        $daily_sales = Transaction::where('user_id', $user->id)
             ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_amount')
             ->groupBy('date')
             ->orderBy('date', 'desc')
@@ -29,7 +29,7 @@ class SalesReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'daily_sales' => $dailySales,
+            'daily_sales' => $daily_sales,
         ]);
     }
 
