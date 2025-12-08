@@ -33,37 +33,42 @@ class SalesReportController extends Controller
         ]);
     }
 
-    public function fetchWeekly(Request $request)
-    {
-        $user = $request->user();
+   public function fetchWeekly(Request $request)
+{
+    $user = $request->user();
 
-        $weeklySales = Transaction::where('user_id', $user->id)
-            ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as total_amount')
-            ->groupBy('year_week')
-            ->orderBy('year_week', 'desc')
-            ->get()
-            ->map(function ($item) use ($user) {
-                $year = substr($item->year_week, 0, 4);
-                $week = substr($item->year_week, 4, 2);
+    $weeklySales = Transaction::where('user_id', $user->id)
+        ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as total_amount')
+        ->groupBy('year_week')
+        ->orderBy('year_week', 'desc')
+        ->get()
+        ->map(function ($item) use ($user) {
 
-                // Use Carbon to get start and end of ISO week
-                $startDate = Carbon::now()->setISODate($year, $week)->startOfWeek();
-                $endDate   = Carbon::now()->setISODate($year, $week)->endOfWeek();
+            // Ensure year_week is ALWAYS a 6-character string, e.g. "202406"
+            $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
 
-                return [
-                    'week_start' => $startDate->toDateString(),
-                    'week_end'   => $endDate->toDateString(),
-                    'user'       => $user->name,
-                    'action'     => 'Sale',
-                    'amount'     => $item->total_amount,
-                ];
-            });
+            $year = substr($yearWeek, 0, 4);
+            $week = substr($yearWeek, 4, 2);
 
-        return response()->json([
-            'success' => true,
-            'weekly_sales' => $weeklySales,
-        ]);
-    }
+            // Carbon correct ISO week parsing
+            $startDate = Carbon::now()->setISODate((int)$year, (int)$week)->startOfWeek();
+            $endDate   = Carbon::now()->setISODate((int)$year, (int)$week)->endOfWeek();
+
+            return [
+                'week_start' => $startDate->toDateString(),
+                'week_end'   => $endDate->toDateString(),
+                'user'       => $user->name,
+                'action'     => 'Sale',
+                'amount'     => $item->total_amount,
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'weekly_sales' => $weeklySales,
+    ]);
+}
+
 
     public function fetchMonthly(Request $request)
     {
