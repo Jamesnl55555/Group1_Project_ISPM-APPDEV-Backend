@@ -36,30 +36,31 @@ class SalesReportController extends Controller
 public function fetchWeekly(Request $request)
 {
     $user = $request->user();
-    
+
     $weeklySales = Transaction::where('user_id', $user->id)
         ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as amount')
         ->groupBy('year_week')
         ->orderBy('year_week', 'desc')
-        ->get()
-        ->map(function ($item) use ($user) {
+        ->get();
 
-            $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
+    $weeklySales = $weeklySales->map(function ($item) use ($user) {
+        $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
+        $year = (int) substr($yearWeek, 0, 4);
+        $week = (int) substr($yearWeek, 4, 2);
 
-            $year = substr($yearWeek, 0, 4);
-            $week = substr($yearWeek, 4, 2);
+        // Use createFromISODate instead of now()
+        $startDate = Carbon::createFromISODate($year, $week)->startOfWeek();
+        $endDate   = Carbon::createFromISODate($year, $week)->endOfWeek();
 
-            $startDate = Carbon::now()->setISODate((int) $year, (int) $week)->startOfWeek();
-            $endDate   = Carbon::now()->setISODate((int) $year, (int) $week)->endOfWeek();
-            return [
-                'week_start' => $startDate->toDateString(),
-                'week_end'   => $endDate->toDateString(),
-                'user'       => $user->name,
-                'action'     => 'Sale',
-                'amount'     => $item->amount,
-            ];
-        });
-    Log::info('Weekly raw data', ['data' => $weeklySales]);
+        return [
+            'week_start' => $startDate->toDateString(),
+            'week_end'   => $endDate->toDateString(),
+            'user'       => $user->name,
+            'action'     => 'Sale',
+            'amount'     => $item->amount,
+        ];
+    });
+
     return response()->json([
         'success' => true,
         'weekly_sales' => $weeklySales,
