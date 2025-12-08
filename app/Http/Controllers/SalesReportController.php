@@ -106,33 +106,56 @@ class SalesReportController extends Controller
     }
     }
 
+    
     public function fetchCustom(Request $request)
     {
-        $user = $request->user();
-        $from = $request->query('from');
-        $to   = $request->query('to');
+    $user = $request->user(); 
 
-        if (!$from || !$to) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Both "from" and "to" dates are required.',
-            ], 400);
-        }
+    $request->validate([
+        'from' => 'required|date',
+        'to' => 'required|date|after_or_equal:from',
+    ]);
 
+    $from = $request->input('from');
+    $to = $request->input('to');
+
+    try {
         $totalAmount = Transaction::where('user_id', $user->id)
             ->whereDate('created_at', '>=', $from)
             ->whereDate('created_at', '<=', $to)
             ->sum('total_amount');
 
+        if ($totalAmount == 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No sales records found for the selected date range.',
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'custom_sales' => [
-                'from'   => $from,
-                'to'     => $to,
-                'user'   => $user->name,
-                'action' => 'Sale',
+                'user' => $user->name,
+                'from' => $from,
+                'to' => $to,
+                'action' => 'Sale', // you can change this if needed
                 'amount' => $totalAmount,
-            ],
+            ]
         ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error fetching custom sales report', [
+            'user_id' => $user->id,
+            'from' => $from,
+            'to' => $to,
+            'error' => $e->getMessage(),
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch custom sales report.',
+        ], 500);
     }
+    }
+
 }
