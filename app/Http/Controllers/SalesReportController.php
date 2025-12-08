@@ -29,7 +29,7 @@ class SalesReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'daily_sales' => $daily_sales,
+            'daily_sales' => $daily_sales || [],
         ]);
     }
 
