@@ -38,28 +38,26 @@ class SalesReportController extends Controller
     $user = $request->user();
 
     $weeklySales = Transaction::where('user_id', $user->id)
-        ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as total_amount')
+        ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(amount) as amount')
         ->groupBy('year_week')
         ->orderBy('year_week', 'desc')
         ->get()
         ->map(function ($item) use ($user) {
 
-            // Ensure year_week is ALWAYS a 6-character string, e.g. "202406"
             $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
 
             $year = substr($yearWeek, 0, 4);
             $week = substr($yearWeek, 4, 2);
 
-            // Carbon correct ISO week parsing
-            $startDate = Carbon::now()->setISODate((int)$year, (int)$week)->startOfWeek();
-            $endDate   = Carbon::now()->setISODate((int)$year, (int)$week)->endOfWeek();
+            $startDate = Carbon::now()->setISODate((int) $year, (int) $week)->startOfWeek();
+            $endDate   = Carbon::now()->setISODate((int) $year, (int) $week)->endOfWeek();
 
             return [
                 'week_start' => $startDate->toDateString(),
                 'week_end'   => $endDate->toDateString(),
                 'user'       => $user->name,
                 'action'     => 'Sale',
-                'total_amount'     => $item->total_amount,
+                'amount'     => $item->amount,
             ];
         });
 
@@ -68,6 +66,7 @@ class SalesReportController extends Controller
         'weekly_sales' => $weeklySales,
     ]);
 }
+
 
 
     public function fetchMonthly(Request $request)
