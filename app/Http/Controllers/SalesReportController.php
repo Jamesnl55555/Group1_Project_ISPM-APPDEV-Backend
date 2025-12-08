@@ -92,6 +92,40 @@ class SalesReportController extends Controller
     ]);
     }
 
+    public function fetchMonthly(Request $request)
+    {
+    $user = $request->user();
+    $perPage = $request->input('per_page', 10);
+
+    $monthly_sales = Transaction::select(
+            DB::raw("DATE_TRUNC('month', created_at) AS month_start"),
+            DB::raw("SUM(total_amount) AS amount")
+        )
+        ->where('user_id', $user->id)
+        ->groupBy(DB::raw("DATE_TRUNC('month', created_at)"))
+        ->orderByDesc('month_start')
+        ->paginate($perPage);
+
+    // Transform to readable month
+    $monthly_sales->getCollection()->transform(function ($item) use ($user) {
+        $month = Carbon::parse($item->month_start)->format('F Y'); // e.g., "December 2025"
+        return [
+            'month' => $month,
+            'user' => $user->name,
+            'amount' => (float) $item->amount,
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'monthly_sales' => $monthly_sales->items(),
+        'current_page' => $monthly_sales->currentPage(),
+        'last_page' => $monthly_sales->lastPage(),
+        'per_page' => $monthly_sales->perPage(),
+        'total' => $monthly_sales->total(),
+    ]);
+    }
+
 
     public function fetchCustom(Request $request)
     {
