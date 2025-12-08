@@ -59,7 +59,7 @@ class SalesReportController extends Controller
                 'week_end'   => $endDate->toDateString(),
                 'user'       => $user->name,
                 'action'     => 'Sale',
-                'amount'     => $item->total_amount,
+                'total_amount'     => $item->total_amount,
             ];
         });
 
