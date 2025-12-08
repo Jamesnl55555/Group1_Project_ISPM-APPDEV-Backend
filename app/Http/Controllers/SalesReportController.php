@@ -11,30 +11,26 @@ use Illuminate\Support\Facades\DB;
 class SalesReportController extends Controller
 {
 
-    public function fetchDaily(Request $request)
-    {
+   public function fetchDaily(Request $request)
+{
     $user = $request->user();
-
-    // Get current page from query string
     $perPage = 10;
     $page = $request->query('page', 1);
+    $date = $request->query('date'); 
 
     try {
-        // Query daily sales grouped by date
-        $query = Transaction::where('user_id', $user->id)
-            ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_amount')
-            ->groupBy('date')
-            ->orderBy('date', 'desc');
+        $query = Transaction::where('user_id', $user->id);
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+        $query->orderBy('created_at', 'desc');
 
-        // Paginate results
         $dailySales = $query->paginate($perPage, ['*'], 'page', $page);
-
-        // Format the paginated results
-        $formatted = $dailySales->getCollection()->map(function ($item) use ($user) {
+        $formatted = $dailySales->map(function ($item) use ($user) {
             return [
-                'date' => $item->date,
+                'date' => $item->created_at->toDateString(),
                 'user' => $user->name,
-                'action' => 'Sale',
+                'action' => 'Sale', 
                 'amount' => $item->total_amount,
             ];
         });
@@ -46,91 +42,91 @@ class SalesReportController extends Controller
             'last_page' => $dailySales->lastPage(),
         ]);
     } catch (\Exception $e) {
-        Log::error('Error fetching daily sales', ['error' => $e->getMessage()]);
-
         return response()->json([
             'success' => false,
             'daily_sales' => [],
             'message' => 'Failed to fetch daily sales',
         ], 500);
     }
-    }
-
-    public function fetchWeekly(Request $request)
-    {
+}public function fetchWeekly(Request $request)
+{
     $user = $request->user();
     $perPage = $request->input('per_page', 10);
+    $page = $request->query('page', 1);
 
-    $weekly_sales = Transaction::select(
-            DB::raw("DATE_TRUNC('week', created_at) AS week_start"),
-            DB::raw("SUM(total_amount) AS amount")
-        )
-        ->where('user_id', $user->id)
-        ->groupBy(DB::raw("DATE_TRUNC('week', created_at)"))
-        ->orderByDesc('week_start')
-        ->paginate($perPage);
+    $query = Transaction::where('user_id', $user->id);
 
-    $weekly_sales->getCollection()->transform(function ($item) use ($user) {
-        $weekStart = Carbon::parse($item->week_start)->startOfWeek()->toDateString();
-        $weekEnd = Carbon::parse($item->week_start)->endOfWeek()->toDateString();
+    $weekStart = $request->query('week_start'); // optional
+    $weekEnd = $request->query('week_end');     // optional
 
+    if ($weekStart && $weekEnd) {
+        $query->whereBetween('created_at', [$weekStart, $weekEnd]);
+    }
+
+    $query->orderByDesc('created_at');
+
+    $weeklySales = $query->paginate($perPage, ['*'], 'page', $page);
+
+    $formatted = $weeklySales->map(function ($item) use ($user) {
         return [
-            'week_start' => $weekStart,
-            'week_end' => $weekEnd,
+            'date' => $item->created_at->toDateString(),
             'user' => $user->name,
-            'amount' => (float) $item->amount,
+            'action' => 'Sale',
+            'amount' => $item->total_amount,
         ];
     });
 
     return response()->json([
         'success' => true,
-        'weekly_sales' => $weekly_sales->items(),
-        'current_page' => $weekly_sales->currentPage(),
-        'last_page' => $weekly_sales->lastPage(),
-        'per_page' => $weekly_sales->perPage(),
-        'total' => $weekly_sales->total(),
+        'weekly_sales' => $formatted,
+        'current_page' => $weeklySales->currentPage(),
+        'last_page' => $weeklySales->lastPage(),
+        'per_page' => $weeklySales->perPage(),
+        'total' => $weeklySales->total(),
     ]);
-    }
+}
+
 
     public function fetchMonthly(Request $request)
-    {
+{
     $user = $request->user();
-    $perPage = $request->input('per_page', 10);
+    $month = $request->query('month'); // '01' to '12'
+    $year = $request->query('year');   // e.g. '2025'
+    $perPage = $request->query('per_page', 10);
+    $page = $request->query('page', 1);
 
-    $monthly_sales = Transaction::select(
-            DB::raw("DATE_TRUNC('month', created_at) AS month_start"),
-            DB::raw("SUM(total_amount) AS amount")
-        )
-        ->where('user_id', $user->id)
-        ->groupBy(DB::raw("DATE_TRUNC('month', created_at)"))
-        ->orderByDesc('month_start')
-        ->paginate($perPage);
+    $query = Transaction::where('user_id', $user->id);
 
-    // Transform to readable month
-    $monthly_sales->getCollection()->transform(function ($item) use ($user) {
-        $month = Carbon::parse($item->month_start)->format('F Y'); // e.g., "December 2025"
+    if ($month && $year) {
+        $query->whereYear('created_at', $year)
+              ->whereMonth('created_at', $month);
+    }
+
+    $query->orderByDesc('created_at');
+
+    $monthlySales = $query->paginate($perPage, ['*'], 'page', $page);
+
+    $formatted = $monthlySales->map(function ($item) use ($user) {
         return [
-            'month' => $month,
+            'date' => $item->created_at->toDateString(),
             'user' => $user->name,
-            'amount' => (float) $item->amount,
+            'action' => 'Sale',
+            'amount' => $item->total_amount,
         ];
     });
 
     return response()->json([
         'success' => true,
-        'monthly_sales' => $monthly_sales->items(),
-        'current_page' => $monthly_sales->currentPage(),
-        'last_page' => $monthly_sales->lastPage(),
-        'per_page' => $monthly_sales->perPage(),
-        'total' => $monthly_sales->total(),
+        'monthly_sales' => $formatted,
+        'current_page' => $monthlySales->currentPage(),
+        'last_page' => $monthlySales->lastPage(),
+        'per_page' => $monthlySales->perPage(),
+        'total' => $monthlySales->total(),
     ]);
-    }
-
-
+}
     public function fetchCustom(Request $request)
     {
-    $user = $request->user(); 
-
+    $user = $request->user();
     $request->validate([
         'from' => 'required|date',
         'to' => 'required|date|after_or_equal:from',
@@ -138,42 +134,25 @@ class SalesReportController extends Controller
 
     $from = $request->input('from');
     $to = $request->input('to');
+    $perPage = $request->input('per_page', 10);
 
     try {
-        $totalAmount = Transaction::where('user_id', $user->id)
+        $transactions = Transaction::where('user_id', $user->id)
             ->whereDate('created_at', '>=', $from)
             ->whereDate('created_at', '<=', $to)
-            ->sum('total_amount');
-
-        if ($totalAmount == 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No sales records found for the selected date range.',
-            ]);
-        }
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
 
         return response()->json([
             'success' => true,
-            'custom_sales' => [
-                'user' => $user->name,
-                'from' => $from,
-                'to' => $to,
-                'action' => 'Sale', // you can change this if needed
-                'amount' => $totalAmount,
-            ]
+            'transactions' => $transactions->items(),
+            'current_page' => $transactions->currentPage(),
+            'last_page' => $transactions->lastPage(),
         ]);
-
     } catch (\Exception $e) {
-        Log::error('Error fetching custom sales report', [
-            'user_id' => $user->id,
-            'from' => $from,
-            'to' => $to,
-            'error' => $e->getMessage(),
-        ]);
-
         return response()->json([
             'success' => false,
-            'message' => 'Failed to fetch custom sales report.',
+            'message' => 'Failed to fetch transactions.'
         ], 500);
     }
     }
