@@ -107,42 +107,42 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/archive-item/{id}', [InventoryController::class, 'archiveItem'])->name('archive-product');   
     
     Route::get('/fetchtransactions', function (Request $request) {
-    $user = $request->user(); // get the authenticated user
+    $user = $request->user();
+    $perPage = $request->query('per_page', 10);
+    $page = $request->query('page', 1);
 
-    $transactions = Transaction::where('user_name', $user->name) // filter by user
+    $transactions = Transaction::where('user_name', $user->name)
         ->latest()
-        ->take(10)
-        ->get();
+        ->paginate($perPage, ['*'], 'page', $page);
 
     return response()->json([
         'success' => true,
-        'transactions' => $transactions ?: [],
+        'transactions' => $transactions->items(),
+        'current_page' => $transactions->currentPage(),
+        'last_page' => $transactions->lastPage(),
+        'per_page' => $transactions->perPage(),
+        'total' => $transactions->total(),
     ]);
-    })->name('fetchtransactions');
+    });
 
     Route::get('/fetchcapital', function (Request $request) {
-    try {
-        $user = $request->user();
+    $user = $request->user();
+    $perPage = $request->query('per_page', 10);
+    $page = $request->query('page', 1);
 
-        $capitals = Capital::where('user_id', $user->id) // filter by authenticated user
-            ->latest()
-            ->take(10)
-            ->get();
+    $capitals = Capital::where('user_id', $user->id)
+        ->latest()
+        ->paginate($perPage, ['*'], 'page', $page);
 
-        return response()->json([
-            'success' => true,
-            'capitals' => $capitals,
-        ]);
-    } catch (\Exception $e) {
-        Log::error('FetchCapital error: '.$e->getMessage());
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch capitals',
-            'capitals' => [],
-        ], 500);
-    }
-    })->name('fetchcapital');
+    return response()->json([
+        'success' => true,
+        'capitals' => $capitals->items(),
+        'current_page' => $capitals->currentPage(),
+        'last_page' => $capitals->lastPage(),
+        'per_page' => $capitals->perPage(),
+        'total' => $capitals->total(),
+    ]);
+    });
     
     Route::post('/import', [ExcelController::class, 'import'])->name('import');
     Route::post('/postproducts', [InventoryController::class, 'addItem'])->name('postproducts'); 
