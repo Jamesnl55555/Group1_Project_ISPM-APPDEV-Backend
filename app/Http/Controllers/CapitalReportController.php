@@ -12,169 +12,143 @@ class CapitalReportController extends Controller
     // ================================================================
     // DAILY CAPITAL REPORT
     // ================================================================
-    
     public function fetchDaily(Request $request)
-{
-    $user = $request->user();
-    $date = $request->input('date');
+    {
+        $user = $request->user();
+        $date = $request->input('date');
 
-    if (!$date) {
+        if (!$date) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Date is required',
+            ], 400);
+        }
+
+        $perPage = 10;
+        $daily = Capital::where('user_id', $user->id)
+            ->whereDate('created_at', $date)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Date is required',
-        ], 400);
+            'success' => true,
+            'daily_capital' => $daily->items(),
+            'current_page' => $daily->currentPage(),
+            'last_page' => $daily->lastPage(),
+        ]);
     }
-
-    // Get all capital records for the user for that specific date
-    $daily = Capital::where('user_id', $user->id)
-        ->whereDate('created_at', $date)
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(function ($item) {
-            return [
-                'date' => $item->created_at->format('Y-m-d H:i:s'),
-                'amount' => $item->amount,
-                'action' => 'Capital',
-            ];
-        });
-
-    return response()->json([
-        'success' => true,
-        'daily_capital' => $daily,
-    ]);
-}
-
-
 
     // ================================================================
     // WEEKLY CAPITAL REPORT
     // ================================================================
-   public function fetchWeekly(Request $request)
-{
-    $user = $request->user();
-    $weekNumber = $request->input('week');   // 1,2,3...
-    $month = $request->input('month');       // "01"-"12"
-    $year = $request->input('year');         // e.g., 2025
+    public function fetchWeekly(Request $request)
+    {
+        $user = $request->user();
+        $weekNumber = $request->input('week');   // 1,2,3...
+        $month = $request->input('month');       // "01"-"12"
+        $year = $request->input('year');         // e.g., 2025
 
-    if (!$weekNumber || !$month || !$year) {
+        if (!$weekNumber || !$month || !$year) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Week, Month, and Year are required',
+            ], 400);
+        }
+
+        $firstDayOfMonth = Carbon::createFromDate($year, $month, 1);
+        $startDay = ($weekNumber - 1) * 7 + 1;
+        $endDay = min($weekNumber * 7, $firstDayOfMonth->copy()->endOfMonth()->day);
+
+        $weekStart = Carbon::createFromDate($year, $month, $startDay)->startOfDay();
+        $weekEnd = Carbon::createFromDate($year, $month, $endDay)->endOfDay();
+
+        $weekly = Capital::where('user_id', $user->id)
+            ->whereBetween('created_at', [$weekStart, $weekEnd])
+            ->selectRaw("
+                MIN(DATE(created_at)) as week_start,
+                MAX(DATE(created_at)) as week_end,
+                SUM(amount) as total_amount
+            ")
+            ->groupBy(DB::raw("WEEK(created_at, 1)"))
+            ->orderBy('week_start', 'desc')
+            ->paginate(10);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Week, Month, and Year are required',
-        ], 400);
+            'success' => true,
+            'weekly_capital' => $weekly->items(),
+            'current_page' => $weekly->currentPage(),
+            'last_page' => $weekly->lastPage(),
+        ]);
     }
-
-    // Calculate start and end of the selected week
-    $firstDayOfMonth = \Carbon\Carbon::createFromDate($year, $month, 1);
-    $startDay = ($weekNumber - 1) * 7 + 1;
-    $endDay = min($weekNumber * 7, $firstDayOfMonth->copy()->endOfMonth()->day);
-
-    $weekStart = \Carbon\Carbon::createFromDate($year, $month, $startDay)->startOfDay();
-    $weekEnd = \Carbon\Carbon::createFromDate($year, $month, $endDay)->endOfDay();
-
-    $weekly = Capital::where('user_id', $user->id)
-        ->whereBetween('created_at', [$weekStart, $weekEnd])
-        ->selectRaw("MIN(DATE(created_at)) as week_start, MAX(DATE(created_at)) as week_end, SUM(amount) as total_amount")
-        ->groupBy(DB::raw("WEEK(created_at, 1)"))
-        ->get()
-        ->map(function ($item) {
-            return [
-                'week_start' => $item->week_start,
-                'week_end' => $item->week_end,
-                'amount' => $item->total_amount,
-                'action' => 'Capital',
-            ];
-        });
-
-    return response()->json([
-        'success' => true,
-        'weekly_capital' => $weekly,
-    ]);
-}
 
     // ================================================================
     // MONTHLY CAPITAL REPORT
     // ================================================================
     public function fetchMonthly(Request $request)
-{
-    $user = $request->user();
-    $month = $request->input('month'); // "01" to "12"
-    $year = $request->input('year');   // e.g., "2025"
+    {
+        $user = $request->user();
+        $month = $request->input('month'); // "01" to "12"
+        $year = $request->input('year');   // e.g., "2025"
 
-    if (!$month || !$year) {
+        if (!$month || !$year) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Month and Year are required',
+            ], 400);
+        }
+
+        $startDate = "$year-$month-01";
+        $endDate = date("Y-m-t", strtotime($startDate));
+
+        $monthly = Capital::where('user_id', $user->id)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->selectRaw("
+                YEAR(created_at) as year,
+                MONTH(created_at) as month,
+                SUM(amount) as total_amount
+            ")
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->paginate(10);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Month and Year are required',
-        ], 400);
+            'success' => true,
+            'monthly_capital' => $monthly->items(),
+            'current_page' => $monthly->currentPage(),
+            'last_page' => $monthly->lastPage(),
+        ]);
     }
-
-    // Start and end of the selected month
-    $startDate = "$year-$month-01";
-    $endDate = date("Y-m-t", strtotime($startDate)); // last day of month
-
-    $monthly = Capital::where('user_id', $user->id)
-        ->whereDate('created_at', '>=', $startDate)
-        ->whereDate('created_at', '<=', $endDate)
-        ->selectRaw("YEAR(created_at) as year, MONTH(created_at) as month, SUM(amount) as total_amount")
-        ->groupBy('year', 'month')
-        ->orderBy('year', 'desc')
-        ->orderBy('month', 'desc')
-        ->get()
-        ->map(function ($item) {
-            return [
-                'year' => $item->year,
-                'month' => str_pad($item->month, 2, "0", STR_PAD_LEFT),
-                'amount' => $item->total_amount,
-                'action' => 'Capital',
-            ];
-        });
-
-    return response()->json([
-        'success' => true,
-        'monthly_capital' => $monthly,
-    ]);
-}
 
     // ================================================================
     // CUSTOM RANGE CAPITAL REPORT
     // ================================================================
     public function fetchCustom(Request $request)
-{
-    $user = $request->user();
-    $perPage = 10;
-    $page = $request->input('page', 1);
+    {
+        $user = $request->user();
+        $start = $request->input('start');
+        $end = $request->input('end');
 
-    $start = $request->input('start');
-    $end = $request->input('end');
+        if (!$start || !$end) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Start and end dates are required.',
+            ], 400);
+        }
 
-    if (!$start || !$end) {
+        $custom = Capital::where('user_id', $user->id)
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('DATE(created_at) as date, SUM(amount) as total_amount')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->paginate(10);
+
         return response()->json([
-            'success' => false,
-            'message' => 'Start and end dates are required.'
-        ], 400);
+            'success' => true,
+            'custom_capital' => $custom->items(),
+            'current_page' => $custom->currentPage(),
+            'last_page' => $custom->lastPage(),
+        ]);
     }
-
-    $custom = Capital::where('user_id', $user->id)
-        ->whereBetween('created_at', [$start, $end])
-        ->selectRaw('DATE(created_at) as date, SUM(amount) as total_amount')
-        ->groupBy('date')
-        ->orderBy('date', 'desc')
-        ->get()
-        ->map(function ($item) {
-            return [
-                'date' => $item->date,
-                'amount' => $item->total_amount,
-                'action' => 'Capital',
-            ];
-        });
-
-    $total = $custom->count();
-    $paged = $custom->slice(($page - 1) * $perPage, $perPage)->values();
-
-    return response()->json([
-        'success' => true,
-        'custom_capital' => $paged,
-        'current_page' => (int)$page,
-        'last_page' => (int)ceil($total / $perPage),
-    ]);
-}
 }
