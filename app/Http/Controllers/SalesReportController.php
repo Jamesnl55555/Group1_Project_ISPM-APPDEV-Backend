@@ -73,10 +73,10 @@ class SalesReportController extends Controller
 
 
     
-   public function fetchMonthly(Request $request)
+    public function fetchMonthly(Request $request)
     {
-    $user = $request->user(); // authenticated user
-    Log::info('Current user', ['user' => $user]);
+    $user = $request->user();
+    Log::info('Fetching monthly sales for user', ['user' => $user]);
     $monthly_sales = Transaction::select(
             DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
             DB::raw("user_name as user"),
@@ -85,8 +85,6 @@ class SalesReportController extends Controller
         ->groupBy('month', 'user')
         ->orderBy('month', 'desc')
         ->get();
-
-    // Format data for frontend
     $monthly_sales = $monthly_sales->map(function ($item) {
         return [
             'month' => $item->month,
@@ -100,6 +98,7 @@ class SalesReportController extends Controller
         'monthly_sales' => $monthly_sales,
     ]);
     }
+
     public function fetchCustom(Request $request)
     {
         $user = $request->user();
