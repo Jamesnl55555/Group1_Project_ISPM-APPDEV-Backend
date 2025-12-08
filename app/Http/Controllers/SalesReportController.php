@@ -72,23 +72,24 @@ class SalesReportController extends Controller
 
     public function fetchMonthly(Request $request)
     {
+    $user = $request->user(); // authenticated user
+
     try {
         $monthly_sales = Transaction::select(
                 DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
-                DB::raw("COALESCE(user_name, 'Unknown') as user"),
                 DB::raw("COALESCE(SUM(total_amount), 0) as amount")
             )
-            ->groupBy('month', 'user')
-            ->orderBy('month', 'desc')
-            ->get();
-
-        $monthly_sales = $monthly_sales->map(function ($item) {
-            return [
-                'month' => $item->month ?? '',
-                'user' => $item->user ?? 'Unknown',
-                'amount' => (float) ($item->amount ?? 0),
-            ];
-        });
+            ->where('user_id', $user->id) // only for the logged-in user
+            ->groupBy('month')
+            ->orderBy('month', 'asc')
+            ->get()
+            ->map(function ($item) use ($user) {
+                return [
+                    'month' => $item->month,
+                    'user' => $user->name,
+                    'amount' => (float) $item->amount,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -104,7 +105,6 @@ class SalesReportController extends Controller
         ], 500);
     }
     }
-
 
     public function fetchCustom(Request $request)
     {
