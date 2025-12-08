@@ -19,6 +19,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use GuzzleHttp\Middleware;
 use App\Http\Controllers\Auth\PendingRegistrationController;
+use App\Http\Controllers\CapitalReportController;
 
 Route::post('/register-pending', [PendingRegistrationController::class, 'store']);
 Route::get('/register/confirm', [PendingRegistrationController::class, 'confirm']);
@@ -143,7 +144,7 @@ Route::middleware('auth:sanctum')->group(function () {
         'total' => $capitals->total(),
     ]);
     });
-    
+
     Route::post('/import', [ExcelController::class, 'import'])->name('import');
     Route::post('/postproducts', [InventoryController::class, 'addItem'])->name('postproducts'); 
     Route::post('/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('update-product');
@@ -175,6 +176,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/fetch-monthly', [SalesReportController::class, 'fetchMonthly']);
     Route::get('/fetch-custom', [SalesReportController::class, 'fetchCustom']);
 
+    Route::get('/capital-daily', [CapitalReportController::class, 'fetchDaily']);
+    Route::get('/capital-weekly', [CapitalReportController::class, 'fetchWeekly']);
+    Route::get('/capital-monthly', [CapitalReportController::class, 'fetchMonthly']);
+    Route::get('/capital-custom', [CapitalReportController::class, 'fetchCustom']);
 
     Route::put('/password', 
         [PasswordController::class, 'update']
