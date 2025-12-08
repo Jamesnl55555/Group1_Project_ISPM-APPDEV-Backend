@@ -43,6 +43,7 @@ public function fetchWeekly(Request $request)
         ->groupBy('year_week')
         ->orderBy('year_week', 'desc')
         ->get();
+    Log::info('WeeklySales raw:', $weeklySales->toArray());
 
     // Step 2: Map with Carbon and error handling
     $weeklySales = $weeklySales->map(function ($item) use ($user) {
@@ -51,23 +52,25 @@ public function fetchWeekly(Request $request)
             $year = (int) substr($yearWeek, 0, 4);
             $week = (int) substr($yearWeek, 4, 2);
 
-            $startDate = Carbon::createFromISODate($year, $week)->startOfWeek();
-            $endDate   = Carbon::createFromISODate($year, $week)->endOfWeek();
+            // Safe ISO week conversion
+            $date = Carbon::now();
+            $date->setISODate($year, $week);
+            $startDate = $date->startOfWeek();
+            $endDate = $date->endOfWeek();
 
             return [
                 'week_start' => $startDate->toDateString(),
-                'week_end'   => $endDate->toDateString(),
-                'user'       => $user->name,
-                'action'     => 'Sale',
-                'amount'     => $item->amount,
+                'week_end' => $endDate->toDateString(),
+                'user' => $user->name,
+                'action' => 'Sale',
+                'amount' => $item->amount,
             ];
         } catch (\Exception $e) {
-            Log::error('WeeklySales Carbon error', [
-                'item' => $item->toArray(),
+            Log::error('Carbon weekly error', [
+                'yearWeek' => $item->year_week,
                 'error' => $e->getMessage()
             ]);
-
-            return null; // skip invalid week/year
+            return null;
         }
     })->filter(); // remove null entries
 
