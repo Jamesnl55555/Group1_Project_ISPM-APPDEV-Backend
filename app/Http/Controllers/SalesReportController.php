@@ -70,34 +70,41 @@ class SalesReportController extends Controller
     ]);
     }
 
-
-
-    
     public function fetchMonthly(Request $request)
     {
-    $user = $request->user();
-    Log::info('Fetching monthly sales for user', ['user' => $user]);
-    $monthly_sales = Transaction::select(
-            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
-            DB::raw("user_name as user"),
-            DB::raw("SUM(total_amount) as amount")
-        )
-        ->groupBy('month', 'user')
-        ->orderBy('month', 'desc')
-        ->get();
-    $monthly_sales = $monthly_sales->map(function ($item) {
-        return [
-            'month' => $item->month,
-            'user' => $item->user,
-            'amount' => $item->amount,
-        ];
-    });
+    try {
+        $monthly_sales = Transaction::select(
+                DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
+                DB::raw("COALESCE(user_name, 'Unknown') as user"),
+                DB::raw("COALESCE(SUM(total_amount), 0) as amount")
+            )
+            ->groupBy('month', 'user')
+            ->orderBy('month', 'desc')
+            ->get();
 
-    return response()->json([
-        'success' => true,
-        'monthly_sales' => $monthly_sales,
-    ]);
+        $monthly_sales = $monthly_sales->map(function ($item) {
+            return [
+                'month' => $item->month ?? '',
+                'user' => $item->user ?? 'Unknown',
+                'amount' => (float) ($item->amount ?? 0),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'monthly_sales' => $monthly_sales,
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error fetching monthly sales', ['error' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'monthly_sales' => [],
+            'message' => 'Failed to fetch monthly sales'
+        ], 500);
     }
+    }
+
 
     public function fetchCustom(Request $request)
     {
