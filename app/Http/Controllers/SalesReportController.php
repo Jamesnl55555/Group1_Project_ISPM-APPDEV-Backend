@@ -33,12 +33,12 @@ class SalesReportController extends Controller
         ]);
     }
 
-   public function fetchWeekly(Request $request)
+public function fetchWeekly(Request $request)
 {
     $user = $request->user();
 
     $weeklySales = Transaction::where('user_id', $user->id)
-        ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(amount) as amount')
+        ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as amount')
         ->groupBy('year_week')
         ->orderBy('year_week', 'desc')
         ->get()
@@ -51,7 +51,6 @@ class SalesReportController extends Controller
 
             $startDate = Carbon::now()->setISODate((int) $year, (int) $week)->startOfWeek();
             $endDate   = Carbon::now()->setISODate((int) $year, (int) $week)->endOfWeek();
-
             return [
                 'week_start' => $startDate->toDateString(),
                 'week_end'   => $endDate->toDateString(),
@@ -60,13 +59,13 @@ class SalesReportController extends Controller
                 'amount'     => $item->amount,
             ];
         });
-        dd($weeklySales);
 
     return response()->json([
         'success' => true,
         'weekly_sales' => $weeklySales,
     ]);
 }
+
 
 
 
