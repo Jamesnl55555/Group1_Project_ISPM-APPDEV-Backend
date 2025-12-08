@@ -71,28 +71,33 @@ class SalesReportController extends Controller
 
 
 
+    
     public function fetchMonthly(Request $request)
     {
-        $user = $request->user();
+    $user = $request->user();
+    Log::info('Current user', ['user' => $user]);
+    $transactions = Transaction::where('user_id', $user->id)->get();
+    $monthly_sales = $transactions
+        ->groupBy(function ($transaction) {
+            $date = Carbon::parse($transaction->created_at);
+            return $date->format('Y-m');
+        })
+        ->map(function ($monthTransactions, $key) use ($user) {
+            $totalAmount = $monthTransactions->sum('total_amount');
+            $date = Carbon::createFromFormat('Y-m', $key);
+            return [
+                'month' => $date->format('F Y'), // e.g., "December 2025"
+                'user' => $user->name,
+                'amount' => $totalAmount,
+            ];
+        })
+        ->sortByDesc('month')
+        ->values(); // reset keys
 
-        $monthlySales = Transaction::where('user_id', $user->id)
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(total_amount) as total_amount')
-            ->groupBy('month')
-            ->orderBy('month', 'desc')
-            ->get()
-            ->map(function ($item) use ($user) {
-                return [
-                    'month' => $item->month,
-                    'user' => $user->name,
-                    'action' => 'Sale',
-                    'amount' => $item->total_amount,
-                ];
-            });
-
-        return response()->json([
-            'success' => true,
-            'monthly_sales' => $monthlySales,
-        ]);
+    return response()->json([
+        'success' => true,
+        'monthly_sales' => $monthly_sales,
+    ]);
     }
 
     public function fetchCustom(Request $request)
