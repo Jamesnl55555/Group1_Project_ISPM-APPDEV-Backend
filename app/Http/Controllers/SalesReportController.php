@@ -37,38 +37,46 @@ public function fetchWeekly(Request $request)
 {
     $user = $request->user();
 
+    // Step 1: Fetch weekly aggregates from DB
     $weeklySales = Transaction::where('user_id', $user->id)
         ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as amount')
         ->groupBy('year_week')
         ->orderBy('year_week', 'desc')
         ->get();
 
-    // Log raw query results to debug
-    Log::info('WeeklySales Raw:', $weeklySales->toArray());
-
+    // Step 2: Map with Carbon and error handling
     $weeklySales = $weeklySales->map(function ($item) use ($user) {
-        $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
-        $year = (int) substr($yearWeek, 0, 4);
-        $week = (int) substr($yearWeek, 4, 2);
+        try {
+            $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
+            $year = (int) substr($yearWeek, 0, 4);
+            $week = (int) substr($yearWeek, 4, 2);
 
-        // Use createFromISODate instead of now()->setISODate()
-        $startDate = Carbon::createFromISODate($year, $week)->startOfWeek();
-        $endDate   = Carbon::createFromISODate($year, $week)->endOfWeek();
+            $startDate = Carbon::createFromISODate($year, $week)->startOfWeek();
+            $endDate   = Carbon::createFromISODate($year, $week)->endOfWeek();
 
-        return [
-            'week_start' => $startDate->toDateString(),
-            'week_end'   => $endDate->toDateString(),
-            'user'       => $user->name,
-            'action'     => 'Sale',
-            'amount'     => $item->amount,
-        ];
-    });
+            return [
+                'week_start' => $startDate->toDateString(),
+                'week_end'   => $endDate->toDateString(),
+                'user'       => $user->name,
+                'action'     => 'Sale',
+                'amount'     => $item->amount,
+            ];
+        } catch (\Exception $e) {
+            Log::error('WeeklySales Carbon error', [
+                'item' => $item->toArray(),
+                'error' => $e->getMessage()
+            ]);
+
+            return null; // skip invalid week/year
+        }
+    })->filter(); // remove null entries
 
     return response()->json([
         'success' => true,
         'weekly_sales' => $weeklySales,
     ]);
 }
+
 
 
     public function fetchMonthly(Request $request)
