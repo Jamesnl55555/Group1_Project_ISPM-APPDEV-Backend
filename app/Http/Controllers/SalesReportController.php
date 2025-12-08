@@ -36,7 +36,7 @@ class SalesReportController extends Controller
 public function fetchWeekly(Request $request)
 {
     $user = $request->user();
-
+    
     $weeklySales = Transaction::where('user_id', $user->id)
         ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as amount')
         ->groupBy('year_week')
@@ -59,15 +59,12 @@ public function fetchWeekly(Request $request)
                 'amount'     => $item->amount,
             ];
         });
-
+    Log::info('Weekly raw data', ['data' => $weeklySales]);
     return response()->json([
         'success' => true,
         'weekly_sales' => $weeklySales,
     ]);
 }
-
-
-
 
     public function fetchMonthly(Request $request)
     {
