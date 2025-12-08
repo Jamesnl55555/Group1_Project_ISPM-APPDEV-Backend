@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\Transaction;
 use Carbon\Carbon;
 
@@ -12,7 +12,7 @@ class SalesReportController extends Controller
     public function fetchDaily(Request $request)
     {
         $user = $request->user();
-
+        Log::info('Current user', ['user' => $user]);
         $dailySales = Transaction::where('user_id', $user->id)
             ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_amount')
             ->groupBy('date')
