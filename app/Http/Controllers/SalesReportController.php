@@ -60,6 +60,7 @@ class SalesReportController extends Controller
                 'amount'     => $item->amount,
             ];
         });
+        dd($weeklySales);
 
     return response()->json([
         'success' => true,
