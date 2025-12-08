@@ -35,17 +35,16 @@ class SalesReportController extends Controller
     }
 
     
-    public function fetchWeekly(Request $request){
+    public function fetchWeekly(Request $request)
+    {
     $user = $request->user();
-    Log::info('Current user', ['user' => $user]);
+    $perPage = 10; 
+    $page = $request->input('page', 1);
 
-    // Fetch all transactions for this user
     $transactions = Transaction::where('user_id', $user->id)->get();
 
-    // Group by week start and end
     $weekly_sales = $transactions
         ->groupBy(function ($transaction) {
-            // Use Carbon to get the week start (Monday) and week end (Sunday)
             $weekStart = Carbon::parse($transaction->created_at)->startOfWeek()->toDateString();
             $weekEnd = Carbon::parse($transaction->created_at)->endOfWeek()->toDateString();
             return $weekStart . '|' . $weekEnd;
@@ -62,13 +61,19 @@ class SalesReportController extends Controller
             ];
         })
         ->sortByDesc('week_start')
-        ->values(); // reset keys
+        ->values(); 
+
+    $totalWeeks = $weekly_sales->count();
+    $paginatedWeeks = $weekly_sales->slice(($page - 1) * $perPage, $perPage)->values();
 
     return response()->json([
         'success' => true,
-        'weekly_sales' => $weekly_sales,
+        'weekly_sales' => $paginatedWeeks,
+        'current_page' => (int)$page,
+        'last_page' => (int)ceil($totalWeeks / $perPage),
     ]);
     }
+
 
     public function fetchMonthly(Request $request)
     {
