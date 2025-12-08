@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Transaction;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SalesReportController extends Controller
 {
@@ -75,24 +76,24 @@ class SalesReportController extends Controller
     public function fetchMonthly(Request $request)
     {
     $user = $request->user();
-    Log::info('Current user', ['user' => $user]);
-    $transactions = Transaction::where('user_id', $user->id)->get();
-    $monthly_sales = $transactions
-        ->groupBy(function ($transaction) {
-            $date = Carbon::parse($transaction->created_at);
-            return $date->format('Y-m');
-        })
-        ->map(function ($monthTransactions, $key) use ($user) {
-            $totalAmount = $monthTransactions->sum('total_amount');
-            $date = Carbon::createFromFormat('Y-m', $key);
+    Log::info('Fetching monthly sales for user', ['user_id' => $user->id]);
+
+    $monthly_sales = Transaction::where('user_id', $user->id)
+        ->select(
+            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+            DB::raw("SUM(total_amount) as amount")
+        )
+        ->groupBy('month')
+        ->orderByDesc('month')
+        ->get()
+        ->map(function ($item) use ($user) {
+            $monthName = date("F Y", strtotime($item->month));
             return [
-                'month' => $date->format('F Y'), // e.g., "December 2025"
+                'month' => $monthName,
                 'user' => $user->name,
-                'amount' => $totalAmount,
+                'amount' => $item->amount,
             ];
-        })
-        ->sortByDesc('month')
-        ->values(); // reset keys
+        });
 
     return response()->json([
         'success' => true,
