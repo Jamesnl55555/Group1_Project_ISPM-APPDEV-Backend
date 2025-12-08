@@ -155,28 +155,37 @@ class InventoryController extends Controller
             'transaction_number' => $productNumber,
         ]);
     }
-
     public function fetchLatestTransaction(Request $request)
     {
-        $user = $request->user();
+    $user = $request->user();
 
-        $latestTransaction = Transaction::where('user_id', $user->id) // <- filter by user_id
-            ->orderBy('created_at', 'desc')
-            ->first();
+    // Get the last product_number for this user
+    $lastProductNumber = Transaction::where('user_id', $user->id)
+        ->max('product_number');
 
-        if (!$latestTransaction) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No transactions found.'
-            ], 404);
-        }
-
+    if (!$lastProductNumber) {
         return response()->json([
-            'success' => true,
-            'transaction' => $latestTransaction
+            'success' => false,
+            'message' => 'No transactions found.'
         ]);
     }
 
+    // Get all transactions with that product_number
+    $latestItems = Transaction::where('user_id', $user->id)
+        ->where('product_number', $lastProductNumber)
+        ->get(['quantity', 'total_amount']);
+
+    // Aggregate totals
+    $totalQuantity = $latestItems->sum('quantity');
+    $totalAmount = $latestItems->sum('total_amount');
+
+    return response()->json([
+        'success' => true,
+        'user_name' => $user->name,
+        'total_quantity' => $totalQuantity,
+        'total_amount' => $totalAmount,
+    ]);
+    }
     public function updateItemInc($id, Request $request)
     {
         $user = $request->user();
