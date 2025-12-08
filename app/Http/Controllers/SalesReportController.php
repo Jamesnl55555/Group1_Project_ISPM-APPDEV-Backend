@@ -10,29 +10,52 @@ use Illuminate\Support\Facades\DB;
 
 class SalesReportController extends Controller
 {
+
     public function fetchDaily(Request $request)
     {
-        $user = $request->user();
-        Log::info('Current user', ['user' => $user]);
-        $daily_sales = Transaction::where('user_id', $user->id)
+    $user = $request->user();
+
+    // Get current page from query string
+    $perPage = 10;
+    $page = $request->query('page', 1);
+
+    try {
+        // Query daily sales grouped by date
+        $query = Transaction::where('user_id', $user->id)
             ->selectRaw('DATE(created_at) as date, SUM(total_amount) as total_amount')
             ->groupBy('date')
-            ->orderBy('date', 'desc')
-            ->get()
-            ->map(function ($item) use ($user) {
-                return [
-                    'date' => $item->date,
-                    'user' => $user->name,
-                    'action' => 'Sale',
-                    'amount' => $item->total_amount,
-                ];
-            });
+            ->orderBy('date', 'desc');
+
+        // Paginate results
+        $dailySales = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // Format the paginated results
+        $formatted = $dailySales->getCollection()->map(function ($item) use ($user) {
+            return [
+                'date' => $item->date,
+                'user' => $user->name,
+                'action' => 'Sale',
+                'amount' => $item->total_amount,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'daily_sales' => $daily_sales,
+            'daily_sales' => $formatted,
+            'current_page' => $dailySales->currentPage(),
+            'last_page' => $dailySales->lastPage(),
         ]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching daily sales', ['error' => $e->getMessage()]);
+
+        return response()->json([
+            'success' => false,
+            'daily_sales' => [],
+            'message' => 'Failed to fetch daily sales',
+        ], 500);
     }
+    }
+
 
     
     public function fetchWeekly(Request $request)
@@ -75,30 +98,35 @@ class SalesReportController extends Controller
     }
 
 
-    public function fetchMonthly(Request $request)
+   public function fetchMonthly(Request $request)
     {
-    $user = $request->user(); // authenticated user
+    $user = $request->user();
+    $perPage = 10;
+    $page = $request->input('page', 1);
 
     try {
-        $monthly_sales = Transaction::select(
+        $query = Transaction::select(
                 DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
                 DB::raw("COALESCE(SUM(total_amount), 0) as amount")
             )
-            ->where('user_id', $user->id) // only for the logged-in user
+            ->where('user_id', $user->id) 
             ->groupBy('month')
-            ->orderBy('month', 'asc')
-            ->get()
-            ->map(function ($item) use ($user) {
-                return [
-                    'month' => $item->month,
-                    'user' => $user->name,
-                    'amount' => (float) $item->amount,
-                ];
-            });
+            ->orderBy('month', 'asc');
+        $monthly_sales = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $monthly_sales_data = $monthly_sales->getCollection()->map(function ($item) use ($user) {
+            return [
+                'month' => $item->month,
+                'user' => $user->name,
+                'amount' => (float) $item->amount,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'monthly_sales' => $monthly_sales,
+            'monthly_sales' => $monthly_sales_data,
+            'current_page' => $monthly_sales->currentPage(),
+            'last_page' => $monthly_sales->lastPage(),
         ]);
 
     } catch (\Exception $e) {
@@ -110,8 +138,6 @@ class SalesReportController extends Controller
         ], 500);
     }
     }
-
-    
     public function fetchCustom(Request $request)
     {
     $user = $request->user(); 
