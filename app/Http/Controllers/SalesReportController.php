@@ -33,52 +33,41 @@ class SalesReportController extends Controller
         ]);
     }
 
-public function fetchWeekly(Request $request)
-{
+    
+    public function fetchWeekly(Request $request){
     $user = $request->user();
+    Log::info('Current user', ['user' => $user]);
 
-    // Step 1: Fetch weekly aggregates from DB
-    $weeklySales = Transaction::where('user_id', $user->id)
-        ->selectRaw('YEARWEEK(created_at, 1) as year_week, SUM(total_amount) as amount')
-        ->groupBy('year_week')
-        ->orderBy('year_week', 'desc')
-        ->get();
-    Log::info('WeeklySales raw:', $weeklySales->toArray());
+    // Fetch all transactions for this user
+    $transactions = Transaction::where('user_id', $user->id)->get();
 
-    // Step 2: Map with Carbon and error handling
-    $weeklySales = $weeklySales->map(function ($item) use ($user) {
-        try {
-            $yearWeek = str_pad($item->year_week, 6, "0", STR_PAD_LEFT);
-            $year = (int) substr($yearWeek, 0, 4);
-            $week = (int) substr($yearWeek, 4, 2);
-
-            // Safe ISO week conversion
-            $date = Carbon::now();
-            $date->setISODate($year, $week);
-            $startDate = $date->startOfWeek();
-            $endDate = $date->endOfWeek();
+    // Group by week start and end
+    $weekly_sales = $transactions
+        ->groupBy(function ($transaction) {
+            // Use Carbon to get the week start (Monday) and week end (Sunday)
+            $weekStart = Carbon::parse($transaction->created_at)->startOfWeek()->toDateString();
+            $weekEnd = Carbon::parse($transaction->created_at)->endOfWeek()->toDateString();
+            return $weekStart . '|' . $weekEnd;
+        })
+        ->map(function ($weekTransactions, $key) use ($user) {
+            [$weekStart, $weekEnd] = explode('|', $key);
+            $totalAmount = $weekTransactions->sum('total_amount');
 
             return [
-                'week_start' => $startDate->toDateString(),
-                'week_end' => $endDate->toDateString(),
+                'week_start' => $weekStart,
+                'week_end' => $weekEnd,
                 'user' => $user->name,
-                'action' => 'Sale',
-                'amount' => $item->amount,
+                'amount' => $totalAmount,
             ];
-        } catch (\Exception $e) {
-            Log::error('Carbon weekly error', [
-                'yearWeek' => $item->year_week,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    })->filter(); // remove null entries
+        })
+        ->sortByDesc('week_start')
+        ->values(); // reset keys
 
     return response()->json([
         'success' => true,
-        'weekly_sales' => $weeklySales,
+        'weekly_sales' => $weekly_sales,
     ]);
-}
+    }
 
 
 
