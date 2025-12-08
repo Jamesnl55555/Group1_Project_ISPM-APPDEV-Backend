@@ -97,11 +97,10 @@ class SalesReportController extends Controller
     ]);
     }
 
-
-   public function fetchMonthly(Request $request)
-    {
+    public function fetchMonthly(Request $request)
+{
     $user = $request->user();
-    $perPage = 10;
+    $perPage = 10; // items per page
     $page = $request->input('page', 1);
 
     try {
@@ -109,12 +108,13 @@ class SalesReportController extends Controller
                 DB::raw("TO_CHAR(created_at, 'YYYY-MM') as month"),
                 DB::raw("COALESCE(SUM(total_amount), 0) as amount")
             )
-            ->where('user_id', $user->id) 
+            ->where('user_id', $user->id)
             ->groupBy('month')
             ->orderBy('month', 'asc');
-        $monthly_sales = $query->paginate($perPage, ['*'], 'page', $page);
 
-        $monthly_sales_data = $monthly_sales->getCollection()->map(function ($item) use ($user) {
+        $paginated = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $monthly_sales = $paginated->getCollection()->map(function ($item) use ($user) {
             return [
                 'month' => $item->month,
                 'user' => $user->name,
@@ -124,11 +124,10 @@ class SalesReportController extends Controller
 
         return response()->json([
             'success' => true,
-            'monthly_sales' => $monthly_sales_data,
-            'current_page' => $monthly_sales->currentPage(),
-            'last_page' => $monthly_sales->lastPage(),
+            'monthly_sales' => $monthly_sales,
+            'current_page' => $paginated->currentPage(),
+            'last_page' => $paginated->lastPage(),
         ]);
-
     } catch (\Exception $e) {
         Log::error('Error fetching monthly sales', ['error' => $e->getMessage()]);
         return response()->json([
@@ -138,6 +137,7 @@ class SalesReportController extends Controller
         ], 500);
     }
     }
+
     public function fetchCustom(Request $request)
     {
     $user = $request->user(); 
