@@ -66,14 +66,12 @@ class InventoryController extends Controller
             'price' => 'required|numeric',
             'category' => 'nullable|string|max:255',
             'is_archived' => 'required|integer',
-            'file' => 'required|url',
+            'file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
         if ($product = Product::where('name', $validatedData['name'])->first()) {
             return redirect()->back()->withErrors(['name' => 'Product with this name already exists.']);
         }
-
-        $filePath = request()->file('file')->store('images', 'public');
         $product = Product::create([
             'name' => $validatedData['name'],
             'quantity' => $validatedData['quantity'],
@@ -84,7 +82,7 @@ class InventoryController extends Controller
         ]);
 
         ProductHistory::create([
-            'user_id' => $user->id, // <- Added user_id
+            'user_id' => $user->id,
             'product_name' => $product->name,
             'action' => 'Added ' . $validatedData['name'],
             'changed_data' => 'none',
