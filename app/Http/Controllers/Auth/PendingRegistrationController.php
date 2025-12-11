@@ -57,8 +57,10 @@ class PendingRegistrationController extends Controller
             'subject' => $subject,
             'text' => $text, // plain text link
         ]);
+        dd($response->body());
 
         if (!$response->successful()) {
+            $pending->delete();
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send verification email. Please try again later.'
