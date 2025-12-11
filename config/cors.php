@@ -3,11 +3,11 @@ return [
 
     'paths' => [
     'api/*', 
-    'login',
-    'logout',
-    'register',
-    'forgot-password',
-    'reset-password',
+    '/login',
+    '/logout',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
     'sanctum/*'],
 
     'allowed_methods' => ['*'],
@@ -26,4 +26,5 @@ return [
 
     'supports_credentials' => true,
 ];
+
 
