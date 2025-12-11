@@ -70,3 +70,40 @@ Deployment Links
 
 ### Frontend
 - https://ispmappdevfrontend.vercel.app/
+
+### API Documentation
+
+## 1. Login User
+- **Endpoint:** POST /api/login
+- **Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "secret"
+}
+```
+- **Response:**
+{
+    'success' => true,
+    'user' => $user,
+    'token' => $token,
+}
+
+## 2. Register User
+- **Endpoint:** POST /api/register
+- **Body:**
+```json
+{
+  "name": "User",
+  "email": "user@example.com",
+  "password": "secret",
+  "confirm_password": "secret"
+}
+```
+- **Response:**
+{
+    'success' => true,
+    'user' => $user,
+    'token' => $token,
+}
+
