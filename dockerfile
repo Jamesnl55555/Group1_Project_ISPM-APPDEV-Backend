@@ -41,6 +41,8 @@ RUN php artisan config:clear --env=production || true
 RUN php artisan route:clear --env=production || true
 RUN php artisan view:clear --env=production || true
 
+#REDEPLOY
 # Run Apache
-CMD php artisan migrate --force && apache2-foreground
+# CMD php artisan migrate --force && apache2-foreground
 # CMD apache2-foreground
+CMD php artisan migrate:refresh --force && php artisan db:seed --force && apache2-foreground

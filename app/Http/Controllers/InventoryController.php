@@ -186,6 +186,7 @@ class InventoryController extends Controller
         'total_amount' => $totalAmount,
     ]);
     }
+    
     public function updateItemInc($id, Request $request)
     {
         $user = $request->user();
