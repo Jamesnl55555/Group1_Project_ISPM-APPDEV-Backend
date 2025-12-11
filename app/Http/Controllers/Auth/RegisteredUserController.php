@@ -33,10 +33,8 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
         
-
-        event(new Registered($user));
-
-
+        //Only when the system is ready for paid email services
+        // event(new Registered($user));
         $token = $user->createToken('auth-token')->plainTextToken;
         
         return response()->json([
