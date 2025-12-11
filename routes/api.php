@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesReportController;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -40,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     return $request->user();
     })->name('user');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
-    Route::get('/api/amounts', [ChartController::class, 'amountsOverTime']);
+    Route::get('/amounts', [ChartController::class, 'amountsOverTime']);
     Route::get('/fetchtotaltransactions', [TransactionsController::class, 'fetchTotalAmount']);
     Route::get('/fetchproducts', function (Request $request) {
     $user = $request->user();
@@ -88,9 +89,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/latest-transaction', [InventoryController::class, 'fetchLatestTransaction'])->name('latest-transaction');
-    Route::get('/latest-transactions', [InventoryController::class, 'fetchLatestThreeTransactions'])->name('latest-transaction');
-    Route::get('/low-stock', [InventoryController::class, 'countLowStockProducts'])->name('low-stock-count');
-    Route::get('/latest-products', [InventoryController::class, 'getUserProducts'])->name('latest-products');
+    Route::get('/latest-transactions', [TransactionsController::class, 'fetchLatestThreeTransactions'])->name('latest-transaction');
+    Route::get('/low-stock', [ProductController::class, 'countLowStockProducts'])->name('low-stock-count');
+    Route::get('/user-products', [ProductController::class, 'getUserProducts'])->name('latest-products');
 
     Route::get('/fetchproduct/{id}', function (Request $request, $id) {
     $user = $request->user();
