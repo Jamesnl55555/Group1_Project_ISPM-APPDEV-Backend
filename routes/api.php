@@ -1,6 +1,7 @@
 <?php
 
-
+use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Cloudinary;
 use Illuminate\Http\Request;
 use App\Http\Controllers\TransactionsController;
 use Illuminate\Support\Facades\Route;
@@ -16,8 +17,8 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\ChartController;
+use App\Http\Controllers\ExcelController;
 use App\Models\Capital;
 use App\Models\Product;
 use App\Models\Transaction;
@@ -34,6 +35,24 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 
+
+
+Route::get('/api/sign-upload', function () {
+    $timestamp = time();
+    $params = [
+        'timestamp' => $timestamp,
+    ];
+    ksort($params);
+    $paramString = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+    $signature = sha1($paramString . env('CLOUDINARY_API_SECRET'));
+
+    return response()->json([
+        'signature' => $signature,
+        'timestamp' => $timestamp,
+        'api_key' => env('CLOUDINARY_API_KEY'),
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+    ]);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -152,12 +171,12 @@ Route::middleware('auth:sanctum')->group(function () {
     ]);
     });
 
-    Route::post('/import', [ExcelController::class, 'import'])->name('import');
     Route::post('/postproducts', [InventoryController::class, 'addItem'])->name('postproducts'); 
     Route::post('/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('update-product');
     Route::post('/delete-item/{id}', [InventoryController::class, 'deleteItem'])->name('delete-item');
     Route::post('/checkout', [InventoryController::class, 'checkout'])->name('checkout');
     Route::post('/unarchive/{id}', [InventoryController::class, 'unarchiveItem']);
+    Route::post('/import', [ExcelController::class, 'import'])->name('import');
     Route::get('/email/verify-status', function (Request $request) {
         return response()->json([
             'verified' => $request->user()->hasVerifiedEmail(),

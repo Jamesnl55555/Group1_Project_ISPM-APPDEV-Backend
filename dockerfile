@@ -40,6 +40,7 @@ RUN php artisan cache:clear --env=production --database=pgsql || true
 RUN php artisan config:clear --env=production || true
 RUN php artisan route:clear --env=production || true
 RUN php artisan view:clear --env=production || true
+RUN php artisan vendor:publish --tag=cloudinary
 
 #REDEPLOY
 # Run Apache

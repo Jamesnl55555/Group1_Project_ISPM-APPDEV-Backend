@@ -66,7 +66,7 @@ class InventoryController extends Controller
             'price' => 'required|numeric',
             'category' => 'nullable|string|max:255',
             'is_archived' => 'required|integer',
-            'file' => 'required|image',
+            'file' => 'required|url',
         ]);
 
         if ($product = Product::where('name', $validatedData['name'])->first()) {
@@ -80,8 +80,7 @@ class InventoryController extends Controller
             'price' => $validatedData['price'],
             'category' => $validatedData['category'],
             'is_archived' => $validatedData['is_archived'],
-            'user_id' => $user->id, // <- Added user_id
-            'file_path' => 'storage/' . $filePath,
+            'file_path' => $validatedData['file_path'],
         ]);
 
         ProductHistory::create([
