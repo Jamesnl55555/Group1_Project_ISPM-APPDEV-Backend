@@ -45,4 +45,4 @@ RUN php artisan view:clear --env=production || true
 # Run Apache
 # CMD php artisan migrate --force && apache2-foreground
 # CMD apache2-foreground
-CMD php artisan migrate:fresh --force && php artisan db:seed --force && apache2-foreground
+CMD php artisan migrate:fresh --force && apache2-foreground
