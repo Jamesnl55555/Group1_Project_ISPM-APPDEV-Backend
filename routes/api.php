@@ -1,6 +1,8 @@
 <?php
 
+
 use Illuminate\Http\Request;
+use App\Http\Controllers\TransactionsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ExcelController;
+use App\Http\Controllers\ChartController;
 use App\Models\Capital;
 use App\Models\Product;
 use App\Models\Transaction;
@@ -32,14 +35,15 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('p
 
 
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::get('/user', function (Request $request) {
     return $request->user();
     })->name('user');
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
-    
+    Route::get('/api/amounts', [ChartController::class, 'amountsOverTime']);
+    Route::get('/fetchtotaltransactions', [TransactionsController::class, 'fetchTotalAmount']);
     Route::get('/fetchproducts', function (Request $request) {
     $user = $request->user();
-
     $products = Product::where('user_id', $user->id) // only the current user's products
         ->where('is_archived', 0)
         ->orderBy('id', 'desc')
@@ -84,7 +88,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/latest-transaction', [InventoryController::class, 'fetchLatestTransaction'])->name('latest-transaction');
-    
+    Route::get('/latest-transactions', [InventoryController::class, 'fetchLatestThreeTransactions'])->name('latest-transaction');
+    Route::get('/low-stock', [InventoryController::class, 'countLowStockProducts'])->name('low-stock-count');
+    Route::get('/latest-products', [InventoryController::class, 'getUserProducts'])->name('latest-products');
 
     Route::get('/fetchproduct/{id}', function (Request $request, $id) {
     $user = $request->user();
