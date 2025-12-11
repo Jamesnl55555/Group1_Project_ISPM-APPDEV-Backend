@@ -13,7 +13,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://ispmappdevfrontend.vercel.app',
+        'https://ispmappdevfrontend.vercel.app', 'http://localhost:5173'
     ],
 
     'allowed_origins_patterns' => [],
