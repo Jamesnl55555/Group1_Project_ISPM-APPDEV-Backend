@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Cloudinary\Cloudinary;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\Capital;
@@ -10,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\TransactionHistory;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
@@ -58,41 +60,74 @@ class InventoryController extends Controller
 
     public function addItem(Request $request)
     {
-        $user = $request->user();
+    $user = $request->user();
+    // Validate request
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'quantity' => 'required|integer',
+        'price' => 'required|numeric',
+        'category' => 'nullable|string|max:255',
+        'is_archived' => 'required|integer',
+        'file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+    ]);
 
-        $validatedData = request()->validate([
-            'name' => 'required|string|max:255',
-            'quantity' => 'required|integer',
-            'price' => 'required|numeric',
-            'category' => 'nullable|string|max:255',
-            'is_archived' => 'required|integer',
-            'file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+    // Default image
+    $imageUrl = 'empty';
+
+    // Upload to Cloudinary if a file is provided
+    if ($request->hasFile('file')) {
+
+        $cloudinary = new Cloudinary([
+            'cloud' => [
+                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                'api_key' => env('CLOUDINARY_API_KEY'),
+                'api_secret' => env('CLOUDINARY_API_SECRET'),
+            ]
         ]);
 
-        if ($product = Product::where('name', $validatedData['name'])->first()) {
-            return redirect()->back()->withErrors(['name' => 'Product with this name already exists.']);
-        }
-        $product = Product::create([
-            'name' => $validatedData['name'],
-            'quantity' => $validatedData['quantity'],
-            'price' => $validatedData['price'],
-            'category' => $validatedData['category'],
-            'is_archived' => $validatedData['is_archived'],
-            'file_path' => $validatedData['file_path'],
-        ]);
+        $upload = $cloudinary->uploadApi();
 
-        ProductHistory::create([
-            'user_id' => $user->id,
-            'product_name' => $product->name,
-            'action' => 'Added ' . $validatedData['name'],
-            'changed_data' => 'none',
-        ]);
+        $uploadResult = $upload->upload(
+            $request->file('file')->getRealPath(),
+            ['folder' => 'products']
+        );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product added successfully.',
-        ]);
+        $imageUrl = $uploadResult['secure_url'];
     }
+
+    // Check for existing product name
+    if (Product::where('name', $validatedData['name'])->exists()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Product with this name already exists.'
+        ], 422);
+    }
+
+    // Create the product
+    $product = Product::create([
+        'name' => $validatedData['name'],
+        'quantity' => $validatedData['quantity'],
+        'price' => $validatedData['price'],
+        'category' => $validatedData['category'],
+        'is_archived' => $validatedData['is_archived'],
+        'file_path' => $imageUrl ?? 'empty',
+        'user_id' => $user->id,
+    ]);
+
+    // Save product history
+    ProductHistory::create([
+        'user_id' => $user->id,
+        'product_name' => $product->name,
+        'action' => 'Added ' . $validatedData['name'],
+        'changed_data' => 'none',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Product added successfully.',
+    ]);
+    }
+
 
     public function checkout(Request $request)
     {
