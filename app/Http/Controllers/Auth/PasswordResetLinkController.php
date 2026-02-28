@@ -5,38 +5,28 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use App\Services\BrevoMailService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 
 class PasswordResetLinkController extends Controller
 {
-    protected BrevoMailService $mailer;
-
-    public function __construct(BrevoMailService $mailer)
-    {
-        $this->mailer = $mailer;
-    }
-
+    /**
+     * Handle a forgot password request
+     */
     public function store(Request $request)
     {
+        // Validate email input
         $request->validate([
             'email' => 'required|email',
         ]);
 
         try {
+            // Attempt to send the password reset link
             $status = Password::sendResetLink(
                 $request->only('email')
             );
 
             if ($status === Password::RESET_LINK_SENT) {
-                $this->mailer->sendEmail(
-                    $request->email,
-                    'User',
-                    'Reset Your Password',
-                    "<p>Click this link to reset your password: <a href='#'>Reset Link</a></p>"
-                );
-
                 return response()->json([
                     'success' => true,
                     'message' => __($status),
@@ -47,13 +37,12 @@ class PasswordResetLinkController extends Controller
                 'email' => [trans($status)],
             ]);
         } catch (\Exception $e) {
-            Log::error('Forgot password failed: ' . $e->getMessage());
+            Log::error('Forgot password failed: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send reset email: ' . $e->getMessage(),
+                'message' => 'Failed to send reset email. Please check logs.',
             ], 500);
         }
     }
-    
 }
