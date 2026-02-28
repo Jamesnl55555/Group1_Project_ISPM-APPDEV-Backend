@@ -14,21 +14,14 @@ class CustomResetPasswordNotification extends Notification
     public function __construct(string $token)
     {
         $this->token = $token;
-        $this->mailer = new BrevoMailService(); // inject your Brevo service
+        $this->mailer = new BrevoMailService();
     }
 
-    /**
-     * Define which channels the notification should use.
-     */
     public function via($notifiable)
     {
-        // We’re using Brevo directly, not Laravel mail channel
         return ['custom'];
     }
 
-    /**
-     * Send the email using BrevoMailService
-     */
     public function toCustom($notifiable)
     {
         $resetUrl = url("/reset-password/{$this->token}?email={$notifiable->email}");
@@ -46,13 +39,14 @@ class CustomResetPasswordNotification extends Notification
                 $htmlContent
             );
         } catch (\Exception $e) {
-            // Log the full error to debug 500 issues
-            Log::error('Brevo email failed: ' . $e->getMessage(), [
+            // Log the full error for debugging
+            Log::error('Brevo email failed in notification', [
+                'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'email' => $notifiable->email,
             ]);
 
-            // Re-throw so Laravel returns 500, but now we have logs
+            // Re-throw so Laravel still returns 500
             throw $e;
         }
     }
