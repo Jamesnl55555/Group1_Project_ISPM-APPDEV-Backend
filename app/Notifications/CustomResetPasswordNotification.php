@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Services\BrevoMailService;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 
 class CustomResetPasswordNotification extends Notification
 {
@@ -16,20 +17,28 @@ class CustomResetPasswordNotification extends Notification
 
     public function via($notifiable)
     {
-        // Using custom Brevo mail service
-        return ['custom'];
+        // Laravel won't try to use its default mailer
+        return [];
     }
 
-    public function toCustom($notifiable)
+    public function toMail($notifiable)
     {
-        $brevo = new BrevoMailService();
         $resetUrl = url("/reset-password/{$this->token}?email={$notifiable->email}");
-
         $subject = 'Reset Your Password';
         $htmlContent = "<p>Hello {$notifiable->name},</p>
                         <p>Click the link below to reset your password:</p>
                         <a href='{$resetUrl}'>Reset Password</a>";
 
-        $brevo->sendEmail($notifiable->email, $notifiable->name, $subject, $htmlContent);
+        try {
+            $brevo = new BrevoMailService();
+            $brevo->sendEmail($notifiable->email, $notifiable->name, $subject, $htmlContent);
+        } catch (\Exception $e) {
+            Log::error('Brevo email error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'class' => get_class($e),
+            ]);
+
+            throw $e;
+        }
     }
 }

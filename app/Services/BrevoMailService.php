@@ -15,13 +15,9 @@ class BrevoMailService
 
     public function __construct()
     {
-        // Initialize Brevo client with REST API key (xkeysib-...)
-        $this->client = new Brevo(env('BREVO_API_KEY'));
+        $this->client = new Brevo(env('BREVO_API_KEY')); // xkeysib-xxxxxxx
     }
 
-    /**
-     * Send a transactional email
-     */
     public function sendEmail(string $toEmail, string $toName, string $subject, string $htmlContent): void
     {
         $sender = new SendTransacEmailRequestSender([
@@ -47,8 +43,6 @@ class BrevoMailService
             Log::error('Brevo email failed: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-
-            // Re-throw for debugging
             throw $e;
         }
     }
