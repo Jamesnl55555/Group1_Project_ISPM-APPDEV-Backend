@@ -9,11 +9,11 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesReportController;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\SendCodeController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\InventoryController;
@@ -32,8 +32,9 @@ Route::get('/register/confirm', [PendingRegistrationController::class, 'confirm'
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
-Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
+Route::post('/forgot-password', [SendCodeController::class, 'sendResetCode'])->name('password.email')->middleware('throttle:3,1');
+Route::post('/verify-code', [VerifyEmailController::class, 'verify'])->name('password.verify-code')->middleware('throttle:3,1');
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword'])->name('password.reset');
 
 
 
