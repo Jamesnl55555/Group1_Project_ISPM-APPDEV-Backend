@@ -26,10 +26,12 @@ RUN composer require sendinblue/api-v3-sdk --prefer-stable --ignore-platform-req
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-
 # Set storage permissions
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 777 storage bootstrap/cache
+# ---- ADDITION: Ensure Laravel can write logs & cache ----
+RUN mkdir -p storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+# ----------------------------------------------------------
 
 # Copy Apache config
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
