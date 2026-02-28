@@ -57,8 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
 
     // Override default password reset notification
-    public function sendPasswordResetNotification($token)
-    {
-        $this->notify(new CustomResetPasswordNotification($token));
+    public function sendPasswordResetNotification($token){
+    $this->notify(new \App\Notifications\CustomResetPasswordNotification($token));
     }
 }

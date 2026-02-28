@@ -15,17 +15,12 @@ class BrevoMailService
 
     public function __construct()
     {
-        // Initialize Brevo client with your API key
+        // Initialize Brevo client with REST API key (xkeysib-...)
         $this->client = new Brevo(env('BREVO_API_KEY'));
     }
 
     /**
      * Send a transactional email
-     *
-     * @param string $toEmail
-     * @param string $toName
-     * @param string $subject
-     * @param string $htmlContent
      */
     public function sendEmail(string $toEmail, string $toName, string $subject, string $htmlContent): void
     {
@@ -49,7 +44,11 @@ class BrevoMailService
         try {
             $this->client->transactionalEmails->sendTransacEmail($request);
         } catch (BrevoApiException $e) {
-            Log::error('Brevo email failed: ' . $e->getMessage());
+            Log::error('Brevo email failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Re-throw for debugging
             throw $e;
         }
     }

@@ -10,18 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class PasswordResetLinkController extends Controller
 {
-    /**
-     * Handle a forgot password request
-     */
     public function store(Request $request)
     {
-        // Validate email input
         $request->validate([
             'email' => 'required|email',
         ]);
 
         try {
-            // Attempt to send the password reset link
             $status = Password::sendResetLink(
                 $request->only('email')
             );
@@ -37,11 +32,11 @@ class PasswordResetLinkController extends Controller
                 'email' => [trans($status)],
             ]);
         } catch (\Exception $e) {
-            Log::error('Forgot password failed: '.$e->getMessage());
-
+            // Return full exception so you can debug on Render
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send reset email. Please check logs.',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
