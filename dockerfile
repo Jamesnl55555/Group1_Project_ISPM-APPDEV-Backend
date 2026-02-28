@@ -20,10 +20,12 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Allow dev stability for MailerSend
-RUN composer require mailersend/mailersend-php --prefer-stable --ignore-platform-reqs --no-interaction || true
+# RUN composer require mailersend/mailersend-php --prefer-stable --ignore-platform-reqs --no-interaction || true
+RUN composer require sendinblue/api-v3-sdk --prefer-stable --ignore-platform-reqs --no-interaction
 
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
 
 # Set storage permissions
 RUN chown -R www-data:www-data storage bootstrap/cache \
