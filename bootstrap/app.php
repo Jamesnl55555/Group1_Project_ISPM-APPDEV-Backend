@@ -19,7 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Make API stateful for Sanctum
         $middleware->statefulApi();
-
         // Sanctum must be FIRST in the web stack
         $middleware->web(
             prepend: [

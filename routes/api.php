@@ -25,6 +25,7 @@ use App\Models\Transaction;
 use GuzzleHttp\Middleware;
 use App\Http\Controllers\Auth\PendingRegistrationController;
 use App\Http\Controllers\CapitalReportController;
+use App\Http\Middleware\RefreshTokenExpiration;
 
 Route::post('/register-pending', [PendingRegistrationController::class, 'store']);
 Route::get('/register/confirm', [PendingRegistrationController::class, 'confirm']);
@@ -55,7 +56,7 @@ Route::get('/api/sign-upload', function () {
     ]);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function () {
 
     Route::get('/user', function (Request $request) {
     return $request->user();

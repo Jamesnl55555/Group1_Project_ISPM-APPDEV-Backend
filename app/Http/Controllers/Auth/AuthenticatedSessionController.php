@@ -42,15 +42,23 @@ class AuthenticatedSessionController extends Controller
 
         RateLimiter::clear($request->throttleKey());
 
-        $user = User::where('email', $request->email)->firstOrFail(); 
+        $user = User::where('email', $request->email)->firstOrFail();
 
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-
+        $remember = $request->boolean('remember');
+        
+        $token = $user->createToken(
+            'auth-token',
+            ['*'],
+            now()->addHour()
+        );
+        $token->accessToken->forceFill([
+            'remember' => $remember,
+        ])->save();
+        
         return response()->json([
             'success' => true,
             'user' => $user,
-            'token' => $token,
+            'token' => $token->plainTextToken,
         ]);
     }   
 
