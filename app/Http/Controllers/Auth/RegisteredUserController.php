@@ -34,8 +34,14 @@ class RegisteredUserController extends Controller
         
         event(new Registered($user));
         
-        $token = $user->createToken('auth-token')->plainTextToken;
-        
+        try {
+            $token = $user->createToken('auth-token')->plainTextToken;
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
+                
         return response()->json([
             'success' => true,
             'user' => $user,
