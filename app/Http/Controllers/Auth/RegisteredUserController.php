@@ -24,17 +24,16 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+            ]);
 
-        
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
         
-        //Only when the system is ready for paid email services
-        // event(new Registered($user));
+        event(new Registered($user));
+        
         $token = $user->createToken('auth-token')->plainTextToken;
         
         return response()->json([

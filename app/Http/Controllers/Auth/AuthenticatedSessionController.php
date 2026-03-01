@@ -30,19 +30,35 @@ class AuthenticatedSessionController extends Controller
      public function store(LoginRequest $request)
     {
         $request->ensureIsNotRateLimited();
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+        RateLimiter::hit($request->throttleKey());
 
+        throw ValidationException::withMessages([
+            'email' => ['Incorrect email. Please try again'],
+        ]);
+        }
+
+        if (!Auth::attempt($request->only('email', 'password'))) {
+        RateLimiter::hit($request->throttleKey());
+
+        throw ValidationException::withMessages([
+            'password' => ['Incorrect password. Please try again'],
+        ]);
+    }
         $credentials = $request->only('email', 'password');
-        if (!Auth::attempt($credentials)) {
-             RateLimiter::hit($request->throttleKey());
 
-             throw ValidationException::withMessages([
-                 'email' => [trans('auth.failed')],
-             ]);
+        if (!Auth::attempt($credentials)) {
+            RateLimiter::hit($request->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => ['Invalid credentials.'],
+            ]);
         }
 
         RateLimiter::clear($request->throttleKey());
 
-        $user = User::where('email', $request->email)->firstOrFail();
+        $user = $request->user();
 
         $remember = $request->boolean('remember');
         
