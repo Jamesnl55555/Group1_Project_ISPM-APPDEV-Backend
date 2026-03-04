@@ -15,7 +15,7 @@ public function update(Request $request){
         ]);
 
         $user = request()->user();
-        $user->username = $validated['username'];
+        $user->name = $validated['username'];
         $user->storeName = $validated['storeName'];
         $user->save();
     } catch (\Exception $e) {
