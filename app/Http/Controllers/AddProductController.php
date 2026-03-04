@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 use App\Models\Product;
-
 class AddProductController extends Controller
 {
     public function fetchProducts()

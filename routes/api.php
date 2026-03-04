@@ -26,6 +26,7 @@ use GuzzleHttp\Middleware;
 use App\Http\Controllers\Auth\PendingRegistrationController;
 use App\Http\Controllers\CapitalReportController;
 use App\Http\Middleware\RefreshTokenExpiration;
+use App\Http\Controllers\UpdateProfileController;
 
 Route::post('/register-pending', [PendingRegistrationController::class, 'store']);
 Route::get('/register/confirm', [PendingRegistrationController::class, 'confirm']);
@@ -212,4 +213,6 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::put('/password', 
         [PasswordController::class, 'update']
     )->name('password.update');
+
+    Route::put('editprofile', [UpdateProfileController::class, 'update']);
 });
