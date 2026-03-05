@@ -11,7 +11,7 @@ class UpdateProfileController extends Controller
     {
     $validated = $request->validate([
         'name' => ['required', 'string', 'max:255'],
-        'storeName' => ['required', 'string', 'max:255'],
+        'storeName' => ['string', 'max:255'],
     ]);
 
     $user = $request->user();
