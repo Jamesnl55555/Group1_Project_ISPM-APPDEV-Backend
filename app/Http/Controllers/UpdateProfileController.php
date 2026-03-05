@@ -7,22 +7,27 @@ use App\Models\User;
 
 class UpdateProfileController extends Controller
 {
-public function update(Request $request){
-    try {
-        $validated = $request->validate([
-            'username' => ['required', 'string', 'max:255'],
-            'storeName' => ['required', 'string', 'max:255'],
-        ]);
+    public function update(Request $request)
+    {
+    $validated = $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'storeName' => ['required', 'string', 'max:255'],
+    ]);
 
-        $user = request()->user();
-        $user->name = $validated['username'];
-        $user->storeName = $validated['storeName'];
-        $user->save();
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'error' => $e->getMessage()]);
-    }
+    $user = $request->user();
 
-    return response()->json(['success' => true]);
+    $user->name = $validated['name'];
+    $user->storeName = $validated['storeName'];
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'user' => [
+            'email' => $user->email,
+            'name' => $user->name,
+            'storeName' => $user->storeName,
+        ],
+    ]);
     }
 }
 

@@ -62,7 +62,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::get('/user', function (Request $request) {
     return $request->user();
     })->name('user');
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
     Route::get('/amounts', [ChartController::class, 'amountsOverTime']);
     Route::get('/fetchtotaltransactions', [TransactionsController::class, 'fetchTotalAmount']);
     Route::get('/fetchproducts', function (Request $request) {
