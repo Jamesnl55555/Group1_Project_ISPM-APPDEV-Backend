@@ -11,13 +11,13 @@ class UpdateProfileController extends Controller
     {
     $validated = $request->validate([
         'name' => ['required', 'string', 'max:255'],
-        'storeName' => ['string', 'max:255'],
+        'storeName' => [ 'nullable', 'string', 'max:255'],
     ]);
 
     $user = $request->user();
 
     $user->name = $validated['name'];
-    $user->storeName = $validated['storeName'];
+    $user->storeName = $validated['storeName'] ?? null;
     $user->save();
 
     return response()->json([
