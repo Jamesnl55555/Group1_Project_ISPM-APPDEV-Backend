@@ -58,7 +58,7 @@ class AuthenticatedSessionController extends Controller
 
         RateLimiter::clear($request->throttleKey());
 
-        $user = $request->user();
+        $user = $request->user()->fresh();
 
         $remember = $request->boolean('remember');
         
