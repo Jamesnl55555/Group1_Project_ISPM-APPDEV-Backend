@@ -28,7 +28,18 @@ class PasswordController extends Controller
         ]); 
     }
 
-
+    public function changePass(Request $request){
+        $validated = $request->validate([
+            'password' => ['required', Password::defaults(), 'confirmed'],
+        ]);
+        $request->user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Password updated successfully',
+        ]);
+    }
 
     public function update(Request $request)
     {

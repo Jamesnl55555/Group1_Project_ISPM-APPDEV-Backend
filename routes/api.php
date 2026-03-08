@@ -215,6 +215,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     )->name('password.update');
 
     Route::post('/confPass', [PasswordController::class, 'confirmPass']);
+    Route::put('/changePass', [PasswordController::class, 'changePass']);
 
     Route::put('/editprofile', [UpdateProfileController::class, 'update']);
 });
