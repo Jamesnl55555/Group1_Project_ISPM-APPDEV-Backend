@@ -12,6 +12,24 @@ class PasswordController extends Controller
     /**
      * Update the user's password.
      */
+    public function confirmPass(Request $request){
+        $validated = $request->validate([
+            'password' => ['required']
+        ]);
+        if(!Hash::check($validated['password'], $request->user()->password)){
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect password',
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Password confirmed successfully',
+        ]); 
+    }
+
+
+
     public function update(Request $request)
     {
         $validated = $request->validate([
