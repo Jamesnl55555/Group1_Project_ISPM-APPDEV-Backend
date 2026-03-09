@@ -77,6 +77,7 @@ class AuthenticatedSessionController extends Controller
                 'name' => $user->name,
                 'storeName' => $user->storeName,
                 'email' => $user->email,
+                'profile_image' => $user->profile_image
             ],
             'token' => $token->plainTextToken,
         ]);
