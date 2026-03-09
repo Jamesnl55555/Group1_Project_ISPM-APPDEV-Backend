@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->decimal('capital', 10, 2)->default(0.00);
             $table->string('storeName')->nullable();
+            $table->string('profile_image')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
