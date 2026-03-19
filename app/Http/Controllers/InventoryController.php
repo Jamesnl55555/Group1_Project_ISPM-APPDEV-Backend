@@ -68,7 +68,7 @@ class InventoryController extends Controller
         'price' => 'required|numeric',
         'category' => 'nullable|string|max:255',
         'is_archived' => 'nullable',
-        'color/size' => 'nullable'
+        'color' => 'nullable'
     ]);
 
     // Check for existing product name
@@ -87,7 +87,7 @@ class InventoryController extends Controller
         'category' => $validatedData['category'],
         'is_archived' => $validatedData['is_archived'],
         'file_path' => 'empty',
-        'color/size' => $validatedData['color/size'],
+        'color/size' => $validatedData['color'],
         'user_id' => $user->id,
     ]);
 
