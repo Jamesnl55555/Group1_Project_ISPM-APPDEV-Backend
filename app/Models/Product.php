@@ -20,7 +20,7 @@ class Product extends Model
         'name', 
         'quantity', 
         'price',
-        'color/size',
+        'color_size',
         'category',
         'is_archived',
         'file_path'
