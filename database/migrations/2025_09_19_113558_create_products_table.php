@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->boolean('is_archived')->default(false);
             $table->string('file_path');
+            $table->string('color/size')->nullable();
             $table->timestamps();
         });
     }

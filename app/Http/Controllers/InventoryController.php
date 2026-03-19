@@ -67,33 +67,9 @@ class InventoryController extends Controller
         'quantity' => 'required|integer',
         'price' => 'required|numeric',
         'category' => 'nullable|string|max:255',
-        'is_archived' => 'required|integer',
-        'file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+        'is_archived' => 'nullable',
+        'color/size' => 'nullable'
     ]);
-
-    // Default image
-    $imageUrl = 'empty';
-
-    // Upload to Cloudinary if a file is provided
-    if ($request->hasFile('file')) {
-
-        $cloudinary = new Cloudinary([
-            'cloud' => [
-                'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
-                'api_key' => env('CLOUDINARY_API_KEY'),
-                'api_secret' => env('CLOUDINARY_API_SECRET'),
-            ]
-        ]);
-
-        $upload = $cloudinary->uploadApi();
-
-        $uploadResult = $upload->upload(
-            $request->file('file')->getRealPath(),
-            ['folder' => 'products']
-        );
-
-        $imageUrl = $uploadResult['secure_url'];
-    }
 
     // Check for existing product name
     if (Product::where('name', $validatedData['name'])->exists()) {
@@ -110,7 +86,8 @@ class InventoryController extends Controller
         'price' => $validatedData['price'],
         'category' => $validatedData['category'],
         'is_archived' => $validatedData['is_archived'],
-        'file_path' => $imageUrl ?? 'empty',
+        'file_path' => 'empty',
+        'color/size' => $validatedData['color/size'],
         'user_id' => $user->id,
     ]);
 
