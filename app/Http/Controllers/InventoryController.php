@@ -85,7 +85,7 @@ class InventoryController extends Controller
         'quantity' => $validatedData['quantity'],
         'price' => $validatedData['price'],
         'category' => $validatedData['category'],
-        'is_archived' => $validatedData['is_archived'],
+        'is_archived' => $validatedData['is_archived'] ?? false,
         'file_path' => 'empty',
         'color_size' => $validatedData['color'],
         'user_id' => $user->id,
