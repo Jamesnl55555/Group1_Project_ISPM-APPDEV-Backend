@@ -3,16 +3,18 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\User;
 use App\Models\Product;
 
 class ProductSeeder extends Seeder
 {
     public function run()
     {
-        foreach (range(1,5) as $userId) {
+        $users = User::all();
+        foreach ($users as $user) {
             Product::factory()->count(10)->create([
-                'user_id' => $userId,
-                'file_path' => 'placeholder.jpg'
+                'user_id' => $user->id,
+                'file_path' => 'placeholder.jpg',
             ]);
         }
     }
