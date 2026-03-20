@@ -28,6 +28,10 @@ use App\Http\Controllers\CapitalReportController;
 use App\Http\Middleware\RefreshTokenExpiration;
 use App\Http\Controllers\UpdateProfileController;
 
+Route::get('/ping', function () {
+    return response()->json(['status' => 'ok']);
+});
+
 Route::post('/register-pending', [PendingRegistrationController::class, 'store']);
 Route::get('/register/confirm', [PendingRegistrationController::class, 'confirm']);
 
@@ -65,6 +69,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout'); 
     Route::get('/amounts', [ChartController::class, 'amountsOverTime']);
     Route::get('/fetchtotaltransactions', [TransactionsController::class, 'fetchTotalAmount']);
+    
     Route::get('/fetchproducts', function (Request $request) {
     $user = $request->user();
     $products = Product::where('user_id', $user->id)
