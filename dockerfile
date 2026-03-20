@@ -58,7 +58,4 @@ RUN php artisan vendor:publish --tag=cloudinary
 # CMD php artisan migrate:fresh --force && apache2-foreground
 
 #===========
-COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-CMD ["docker-entrypoint.sh"]
+CMD bash -c "until php artisan migrate:status >/dev/null 2>&1; do echo 'Waiting for DB...'; sleep 3; done; php artisan migrate --force; php artisan db:seed --class=ProductSeeder --force; apache2-foreground"
