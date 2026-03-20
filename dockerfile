@@ -58,7 +58,7 @@ RUN php artisan vendor:publish --tag=cloudinary
 # CMD php artisan migrate:fresh --force && apache2-foreground
 
 #===========
-RUN php artisan migrate:fresh --force && php artisan db:seed --class=ProductSeeder --force
+COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Start Apache
-CMD ["apache2-foreground"]
+CMD ["docker-entrypoint.sh"]
