@@ -49,10 +49,17 @@ RUN php artisan vendor:publish --tag=cloudinary
 #REDEPLOY
 # Run Apache
 
+#===========
 # storage does not clear every reset
-CMD php artisan migrate --force && apache2-foreground
+# CMD php artisan migrate --force && apache2-foreground
 
-# CMD apache2-foreground
-
+#===========
 # storage clear every reset
 # CMD php artisan migrate:fresh --force && apache2-foreground
+
+#===========
+RUN php artisan migrate --force \
+ && php artisan db:seed --class=ProductSeeder --force
+
+# Start Apache
+CMD ["apache2-foreground"]
