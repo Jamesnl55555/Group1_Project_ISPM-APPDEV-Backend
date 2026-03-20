@@ -71,17 +71,20 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::get('/fetchtotaltransactions', [TransactionsController::class, 'fetchTotalAmount']);
     
     Route::get('/fetchproducts', function (Request $request) {
-    $user = $request->user();
-    $products = Product::where('user_id', $user->id)
-        ->where('is_archived', 0)
-        ->orderBy('id', 'desc')
-        ->paginate(10);
+        $user = $request->user();
 
-    return response()->json([
-        'products' => $products->items(),
-        'current_page' => $products->currentPage(),
-        'last_page' => $products->lastPage(),
-    ]);
+        $query = Product::where('user_id', $user->id)->where('is_archived', 0);
+
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = $request->search;
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+        $products = $query->orderBy('id', 'desc')->paginate(10);
+        return response()->json([
+            'products' => $products->items(),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+        ]);
     });
 
     Route::get('/fetchproducts-lowstock', function (Request $request) {
