@@ -67,7 +67,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::get('/fetchtotaltransactions', [TransactionsController::class, 'fetchTotalAmount']);
     Route::get('/fetchproducts', function (Request $request) {
     $user = $request->user();
-    $products = Product::where('user_id', $user->id) // only the current user's products
+    $products = Product::where('user_id', $user->id)
         ->where('is_archived', 0)
         ->orderBy('id', 'desc')
         ->paginate(10);
@@ -118,9 +118,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::get('/fetchproduct/{id}', function (Request $request, $id) {
     $user = $request->user();
 
-    $product = Product::where('id', $id)
-                      ->where('user_id', $user->id)
-                      ->first();
+    $product = Product::where('id', $id)->where('user_id', $user->id)->first();
     if (!$product) {
         return response()->json([
             'success' => false,
@@ -180,6 +178,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::post('/checkout', [InventoryController::class, 'checkout'])->name('checkout');
     Route::post('/unarchive/{id}', [InventoryController::class, 'unarchiveItem']);
     Route::post('/import', [ExcelController::class, 'import'])->name('import');
+
     Route::get('/email/verify-status', function (Request $request) {
         return response()->json([
             'verified' => $request->user()->hasVerifiedEmail(),

@@ -50,9 +50,9 @@ RUN php artisan vendor:publish --tag=cloudinary
 # Run Apache
 
 # storage does not clear every reset
-# CMD php artisan migrate --force && apache2-foreground
+CMD php artisan migrate --force && apache2-foreground
 
 # CMD apache2-foreground
 
 # storage clear every reset
-CMD php artisan migrate:fresh --force && apache2-foreground
+# CMD php artisan migrate:fresh --force && apache2-foreground
