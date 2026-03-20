@@ -58,8 +58,7 @@ RUN php artisan vendor:publish --tag=cloudinary
 # CMD php artisan migrate:fresh --force && apache2-foreground
 
 #===========
-RUN php artisan migrate --force \
- && php artisan db:seed --class=ProductSeeder --force
+RUN php artisan migrate:fresh --force && php artisan db:seed --class=ProductSeeder --force
 
 # Start Apache
 CMD ["apache2-foreground"]
