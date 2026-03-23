@@ -264,23 +264,16 @@ class InventoryController extends Controller
             'quantity' => 'required|integer',
             'price' => 'required|numeric',
             'category' => 'nullable|string|max:255',
-            'is_archived' => 'required|integer',
-            'file' => 'nullable|image',
+            'is_archived' => 'nullable|integer',
+            'color_size' => 'nullable|string',
+            'file_path' => 'nullable|image',
         ]);
 
         $changedData = [];
         $product = Product::findOrFail($id);
 
-        if ($request->hasFile('file')) {
-            if ($product->file_path && Storage::disk('public')->exists(str_replace('storage/', '', $product->file_path))) {
-                Storage::disk('public')->delete(str_replace('storage/', '', $product->file_path));
-            }
-            $path = $request->file('file')->store('images', 'public');
-            $product->file_path = 'storage/' . $path;
-            $changedData[] = "Picture updated";
-        }
 
-        foreach (['name', 'quantity', 'price', 'category', 'is_archived'] as $field) {
+        foreach (['name', 'quantity', 'price', 'category', 'is_archived', 'file_path', 'color_size'] as $field) {
             if ($product->$field != $validatedData[$field]) {
                 $changedData[] = ucfirst($field) . " changed from '{$product->$field}' to '{$validatedData[$field]}'";
             }
@@ -291,9 +284,10 @@ class InventoryController extends Controller
             'quantity' => $validatedData['quantity'],
             'price' => $validatedData['price'],
             'category' => $validatedData['category'],
-            'user_id' => $user->id, // <- Added user_id
+            'color_size' => $validatedData['color_size'],
+            'user_id' => $user->id,
             'is_archived' => $validatedData['is_archived'],
-            'file_path' => $product->file_path,
+            'file_path' => $validatedData['file_path'],
         ]);
 
         $product->save();
