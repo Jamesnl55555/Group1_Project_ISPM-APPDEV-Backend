@@ -21,6 +21,8 @@ class Transaction extends Model
         'product_name',
         'quantity', 
         'price',
+        'category',
+        'file_path',
         'total_amount',
     ];
 }

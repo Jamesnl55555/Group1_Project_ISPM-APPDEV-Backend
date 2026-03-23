@@ -68,7 +68,8 @@ class InventoryController extends Controller
         'price' => 'required|numeric',
         'category' => 'nullable|string|max:255',
         'is_archived' => 'nullable',
-        'color' => 'nullable'
+        'color' => 'nullable',
+        'file_path' => 'required|string',
     ]);
 
     // Check for existing product name
@@ -86,7 +87,7 @@ class InventoryController extends Controller
         'price' => $validatedData['price'],
         'category' => $validatedData['category'],
         'is_archived' => $validatedData['is_archived'] ?? false,
-        'file_path' => 'empty',
+        'file_path' => $validatedData['file_path'],
         'color_size' => $validatedData['color'],
         'user_id' => $user->id,
     ]);
@@ -114,6 +115,7 @@ class InventoryController extends Controller
             'cart.*.name' => 'required|string',
             'cart.*.quantity' => 'required|integer',
             'cart.*.price' => 'required|numeric',
+            'cart.*.file_path' => 'required|string',
         ]);
 
         $user = $request->user();
