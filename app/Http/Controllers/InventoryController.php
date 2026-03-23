@@ -264,7 +264,7 @@ class InventoryController extends Controller
             'quantity' => 'required|integer',
             'price' => 'required|numeric',
             'category' => 'nullable|string|max:255',
-            'is_archived' => 'nullable|integer',
+            'is_archived' => 'nullable',
             'color_size' => 'nullable|string',
             'file_path' => 'nullable|string',
         ]);
