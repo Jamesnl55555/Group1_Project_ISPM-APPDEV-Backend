@@ -274,8 +274,10 @@ class InventoryController extends Controller
 
 
         foreach (['name', 'quantity', 'price', 'category', 'is_archived', 'file_path', 'color_size'] as $field) {
-            if ($product->$field != $validatedData[$field]) {
-                $changedData[] = ucfirst($field) . " changed from '{$product->$field}' to '{$validatedData[$field]}'";
+            $newValue = $validatedData[$field] ?? null;
+
+            if ($product->$field != $newValue) {
+                $changedData[] = ucfirst($field) . " changed from '{$product->$field}' to '{$newValue}'";
             }
         }
 
