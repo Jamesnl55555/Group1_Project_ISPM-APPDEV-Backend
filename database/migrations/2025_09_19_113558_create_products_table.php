@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('quantity')->nullable();
             $table->decimal('price', 10, 2)->nullable();
             $table->string('category')->nullable();
-            $table->boolean('is_archived')->nullable()->default(false);
+            $table->boolean('is_archived')->default(false);
             $table->string('file_path');
             $table->string('color_size')->nullable();
             $table->timestamps();
