@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('product_name');
             $table->integer('variety_of_items');
             $table->integer('product_number');
+            $table->string('category');
+            $table->string('file_path');
+            $table->string('color_size')->nullable();
             $table->integer('quantity')->nullable();
             $table->decimal('price', 10, 2)->nullable();
             $table->decimal('total_amount', 10, 2);

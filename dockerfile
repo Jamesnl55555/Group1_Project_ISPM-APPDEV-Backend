@@ -55,7 +55,7 @@ RUN php artisan vendor:publish --tag=cloudinary
 
 #===========
 # storage clear every reset
-# CMD php artisan migrate:fresh --force && apache2-foreground
+CMD php artisan migrate:fresh --force && apache2-foreground
 
 #===========
-CMD bash -c "until php artisan migrate:status >/dev/null 2>&1; do echo 'Waiting for DB...'; sleep 3; done; php artisan migrate --force; php artisan db:seed --class=ProductSeeder --force; apache2-foreground"
+# CMD bash -c "until php artisan migrate:status >/dev/null 2>&1; do echo 'Waiting for DB...'; sleep 3; done; php artisan migrate --force; php artisan db:seed --class=ProductSeeder --force; apache2-foreground"
