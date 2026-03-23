@@ -266,7 +266,7 @@ class InventoryController extends Controller
             'category' => 'nullable|string|max:255',
             'is_archived' => 'nullable|integer',
             'color_size' => 'nullable|string',
-            'file_path' => 'nullable|image',
+            'file_path' => 'nullable|string',
         ]);
 
         $changedData = [];
