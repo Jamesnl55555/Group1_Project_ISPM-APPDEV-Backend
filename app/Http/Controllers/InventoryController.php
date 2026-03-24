@@ -66,7 +66,7 @@ class InventoryController extends Controller
         'name' => 'required|string|max:255',
         'quantity' => 'required|integer',
         'price' => 'required|numeric',
-        'category' => 'nullable|string|max:255',
+        'category' => 'required|string|max:255',
         'is_archived' => 'nullable',
         'color' => 'nullable',
         'file_path' => 'required|string',
@@ -129,7 +129,7 @@ class InventoryController extends Controller
             $cartTotal += $totalAmount;
 
             Transaction::create([
-                'user_id' => $user->id, // <- Added user_id
+                'user_id' => $user->id,
                 'user_name' => $user->name,
                 'product_number' => $productNumber,
                 'product_name' => $item['name'],
@@ -137,6 +137,7 @@ class InventoryController extends Controller
                 'price' => $item['price'],
                 'category' => $item['category'],
                 'total_amount' => $totalAmount,
+                'file_path' => $item['file_path'],
                 'variety_of_items' => $varietyOfItems,
             ]);
 
