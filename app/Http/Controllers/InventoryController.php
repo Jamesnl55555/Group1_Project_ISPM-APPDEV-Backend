@@ -116,6 +116,7 @@ class InventoryController extends Controller
             'cart.*.quantity' => 'required|integer',
             'cart.*.price' => 'required|numeric',
             'cart.*.file_path' => 'required|string',
+            'cart.*.category' => 'required|string'
         ]);
 
         $user = $request->user();
@@ -134,6 +135,7 @@ class InventoryController extends Controller
                 'product_name' => $item['name'],
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
+                'category' => $item['category'],
                 'total_amount' => $totalAmount,
                 'variety_of_items' => $varietyOfItems,
             ]);
