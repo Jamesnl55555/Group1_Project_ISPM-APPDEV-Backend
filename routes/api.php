@@ -144,20 +144,17 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     
     Route::get('/fetchtransactions', function (Request $request) {
     $user = $request->user();
-    $perPage = $request->query('per_page', 10);
-    $page = $request->query('page', 1);
 
-    $transactions = Transaction::where('user_name', $user->name)
-        ->latest()
-        ->paginate($perPage, ['*'], 'page', $page);
+    $query = Transaction::where('user_name', $user->name);
+
+    $transactions = $query
+        ->orderBy('id', 'desc')
+        ->paginate(10);
 
     return response()->json([
-        'success' => true,
         'transactions' => $transactions->items(),
         'current_page' => $transactions->currentPage(),
         'last_page' => $transactions->lastPage(),
-        'per_page' => $transactions->perPage(),
-        'total' => $transactions->total(),
     ]);
     });
 
