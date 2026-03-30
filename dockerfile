@@ -49,14 +49,14 @@ RUN php artisan vendor:publish --tag=cloudinary
 #REDEPLOY
 # Run Apache
 
-#===========
+# ===========
 # storage does not clear every reset
-# CMD php artisan migrate --force && apache2-foreground
+CMD php artisan migrate --force && apache2-foreground
 
 #===========
 # storage clear every reset
 # CMD php artisan migrate:fresh --force && apache2-foreground
 
 #===========
-RUN chmod -R 777 storage bootstrap/cache
-CMD bash -c "until php artisan migrate:status >/dev/null 2>&1; do echo 'Waiting for DB...'; sleep 3; done; php artisan migrate --force; php artisan db:seed --class=ProductSeeder --force; apache2-foreground"
+# RUN chmod -R 777 storage bootstrap/cache
+# CMD bash -c "until php artisan migrate:status >/dev/null 2>&1; do echo 'Waiting for DB...'; sleep 3; done; php artisan migrate --force; php artisan db:seed --class=ProductSeeder --force; apache2-foreground"
