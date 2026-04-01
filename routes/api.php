@@ -147,9 +147,13 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
 
     $query = Transaction::where('user_name', $user->name);
 
-    $transactions = $query
-        ->orderBy('id', 'desc')
-        ->paginate(10);
+    if ($request->has('search') && $request->search != '') {
+        $searchTerm = $request->search;
+        $query->where('id', 'like', '%' . $searchTerm . '%')
+              ->orWhere('price', 'like', '%' . $searchTerm . '%');
+    }
+
+    $transactions = $query->orderBy('id', 'desc')->paginate(10);
 
     return response()->json([
         'transactions' => $transactions->items(),
@@ -177,6 +181,47 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     ]);
     });
 
+    Route::put('/update-transaction/{id}', function (Request $request, $id) {
+    $user = $request->user();
+
+    $validatedData = $request->validate([
+        'price' => 'required|numeric',
+        'payment_method' => 'required|string|max:255',
+        'file_path' => 'nullable|string',
+    ]);
+
+    $transaction = Transaction::where('user_name', $user->name)->findOrFail($id);
+
+    $changedData = [];
+    foreach (['price', 'payment_method', 'file_path'] as $field) {
+        $newValue = $validatedData[$field] ?? null;
+        if ($transaction->$field != $newValue) {
+            $changedData[] = ucfirst($field) . " changed from '{$transaction->$field}' to '{$newValue}'";
+        }
+    }
+
+    $transaction->fill($validatedData);
+    $transaction->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Transaction updated successfully.',
+        'changes' => $changedData
+    ]);
+    });
+
+    Route::delete('/delete-transaction/{id}', function (Request $request, $id) {
+    $user = $request->user();
+
+    $transaction = Transaction::where('user_name', $user->name)->findOrFail($id);
+
+    $transaction->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Transaction deleted successfully.'
+    ]);
+    });
     Route::post('/postproducts', [InventoryController::class, 'addItem'])->name('postproducts'); 
     Route::post('/update-product/{id}', [InventoryController::class, 'updateProduct'])->name('update-product');
     Route::post('/delete-item/{id}', [InventoryController::class, 'deleteItem'])->name('delete-item');
