@@ -266,4 +266,5 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::put('/changePass', [PasswordController::class, 'changePass']);
 
     Route::put('/editprofile', [UpdateProfileController::class, 'update']);
+    Route::get('/fetchLatestTransactions', [TransactionsController::class, 'fetchLatestTransactions']);
 });
