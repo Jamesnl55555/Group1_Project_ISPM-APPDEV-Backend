@@ -19,6 +19,7 @@ class Transaction extends Model
         'product_number',
         'variety_of_items',
         'product_name',
+        'payment_method',
         'quantity', 
         'price',
         'category',

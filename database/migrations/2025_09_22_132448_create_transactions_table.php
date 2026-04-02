@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('category');
             $table->string('file_path');
             $table->string('color_size')->nullable();
+            $table->string('payment_method')->nullable();
             $table->integer('quantity')->nullable();
             $table->decimal('price', 10, 2)->nullable();
             $table->decimal('total_amount', 10, 2);

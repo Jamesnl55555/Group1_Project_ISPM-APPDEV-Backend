@@ -149,8 +149,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
 
     if ($request->has('search') && $request->search != '') {
         $searchTerm = $request->search;
-        $query->where('id', 'like', '%' . $searchTerm . '%')
-              ->orWhere('price', 'like', '%' . $searchTerm . '%');
+        $query->where('id', 'like', '%' . $searchTerm . '%');
     }
 
     $transactions = $query->orderBy('id', 'desc')->paginate(10);
