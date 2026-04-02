@@ -70,7 +70,9 @@ class TransactionsController extends Controller
 
     $transactions = Transaction::where('user_id', $user->id)
         ->whereDate('created_at', $latestDate)
-        ->selectRaw('SUM(total_amount) as total_amount, COUNT(DISTINCT DATE_FORMAT(created_at, "%Y-%m-%d %H:%i")) as distinct_minutes')
+        ->selectRaw(
+            'SUM(total_amount) as total_amount, COUNT(DISTINCT TO_CHAR(created_at, \'YYYY-MM-DD HH24:MI\')) as distinct_minutes'
+        )
         ->first();
 
     return response()->json($transactions->toArray());
