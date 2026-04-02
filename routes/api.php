@@ -184,7 +184,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     $user = $request->user();
 
     $validatedData = $request->validate([
-        'price' => 'required|numeric',
+        'total_amount' => 'required|numeric',
         'payment_method' => 'required|string|max:255',
         'file_path' => 'nullable|string',
     ]);
