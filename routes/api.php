@@ -192,7 +192,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     $transaction = Transaction::where('user_name', $user->name)->findOrFail($id);
 
     $changedData = [];
-    foreach (['price', 'payment_method', 'file_path'] as $field) {
+    foreach (['total_amount', 'payment_method', 'file_path'] as $field) {
         $newValue = $validatedData[$field] ?? null;
         if ($transaction->$field != $newValue) {
             $changedData[] = ucfirst($field) . " changed from '{$transaction->$field}' to '{$newValue}'";
