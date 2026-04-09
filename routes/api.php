@@ -273,7 +273,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
         ->latest('created_at')
         ->max('id');
 
-    return response()->json(['latest_product_number' => $latestProduct ? $latestProduct->product_number : 0]);
+    return response()->json(['latest_product_number' => $latestProduct ?? 0]);
     }
     );
     Route::get('/fetchLatestTransactionNumber', function (Request $request) {
@@ -281,7 +281,7 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     $latestTransaction = Transaction::where('user_name', $user->name)
         ->latest('created_at')
         ->max('id');
-    return response()->json(['latest_transaction_number' => $latestTransaction ? $latestTransaction->transaction_number : 0]);
+    return response()->json(['latest_transaction_number' => $latestTransaction ?? 0]);
     }
     );
 });
