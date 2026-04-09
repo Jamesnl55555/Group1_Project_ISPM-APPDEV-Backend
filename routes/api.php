@@ -267,4 +267,20 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
 
     Route::put('/editprofile', [UpdateProfileController::class, 'update']);
     Route::get('/fetchLatestTransactions', [TransactionsController::class, 'fetchLatestTransactions']);
+    Route::get('/fetchLatestProductNumber', function (Request $request) {
+    $user = $request->user();
+    $latestProduct = Product::where('user_id', $user->id)
+        ->latest('created_at')
+        ->first();
+    return response()->json(['latest_product_number' => $latestProduct ? $latestProduct->product_number : 0]);
+    }
+    );
+    Route::get('/fetchLatestTransactionNumber', function (Request $request) {
+    $user = $request->user();
+    $latestTransaction = Transaction::where('user_name', $user->name)
+        ->latest('created_at')
+        ->first();
+    return response()->json(['latest_transaction_number' => $latestTransaction ? $latestTransaction->transaction_number : 0]);
+    }
+    );
 });
