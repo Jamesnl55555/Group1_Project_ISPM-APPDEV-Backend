@@ -64,8 +64,8 @@ class AuthenticatedSessionController extends Controller
         
         $token = $user->createToken(
             'auth-token',
-            ['*'],
-            now()->addHour()
+            // ['*'],
+            // now()->addHour()
         );
         $token->accessToken->forceFill([
             'remember' => $remember,
