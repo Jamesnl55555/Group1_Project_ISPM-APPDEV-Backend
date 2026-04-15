@@ -64,12 +64,22 @@ class TransactionsController extends Controller
             'total_amount' => 0,
             'distinct_minutes' => 0
         ]);
+    } 
+
+    $latestDate = Carbon::parse($latestDate);
+    $today = Carbon::today();
+
+    if($latestDate->created_at->isBefore($today)) {
+        return response()->json([
+            'total_amount' => 0,
+            'distinct_minutes' => 0
+        ]);
     }
 
-    $latestDate = Carbon::parse($latestDate)->toDateString();
+    
 
     $transactions = Transaction::where('user_id', $user->id)
-        ->whereDate('created_at', $latestDate)
+        ->whereDate('created_at', $latestDate->toDateString())
         ->selectRaw(
             'SUM(total_amount) as total_amount, COUNT(DISTINCT TO_CHAR(created_at, \'YYYY-MM-DD HH24:MI\')) as distinct_minutes'
         )
