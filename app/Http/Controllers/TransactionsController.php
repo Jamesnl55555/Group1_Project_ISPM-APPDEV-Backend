@@ -69,7 +69,7 @@ class TransactionsController extends Controller
     $latestDate = Carbon::parse($latestDate);
     $today = Carbon::today();
 
-    if($latestDate->created_at->isBefore($today)) {
+    if($latestDate->isBefore($today)) {
         return response()->json([
             'total_amount' => 0,
             'distinct_minutes' => 0
