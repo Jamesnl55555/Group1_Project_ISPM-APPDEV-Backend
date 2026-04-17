@@ -68,7 +68,8 @@ class InventoryController extends Controller
         'price' => 'required|numeric',
         'category' => 'required|string|max:255',
         'is_archived' => 'nullable',
-        'color' => 'nullable',
+        'netWeightNumber' => 'nullable',
+        'netWeightUnit' => 'nullable',
         'file_path' => 'required|string',
     ]);
 
@@ -79,16 +80,19 @@ class InventoryController extends Controller
             'message' => 'Product with this name already exists.'
         ], 422);
     }
+    $userId = $user->id;
+    $nextNumber = Product::where('user_id', $userId)->max('product_number') + 1;
 
-    // Create the product
     $product = Product::create([
         'name' => $validatedData['name'],
         'quantity' => $validatedData['quantity'],
         'price' => $validatedData['price'],
         'category' => $validatedData['category'],
+        'product_number' => $nextNumber,
         'is_archived' => $validatedData['is_archived'] ?? false,
         'file_path' => $validatedData['file_path'],
-        'color_size' => $validatedData['color'],
+        'netWeightNumber' => $validatedData['netWeightNumber'] ?? null,
+        'netWeightUnit' => $validatedData['netWeightUnit'] ?? null,
         'user_id' => $user->id,
     ]);
 
@@ -115,13 +119,16 @@ class InventoryController extends Controller
             'cart.*.name' => 'required|string',
             'cart.*.quantity' => 'required|integer',
             'cart.*.price' => 'required|numeric',
+            'cart.*.netWeightNumber' => 'nullable',
+            'cart.*.netWeightUnit' => 'nullable',
             'cart.*.file_path' => 'required|string',
             'cart.*.category' => 'required|string'
         ]);
 
         $user = $request->user();
-        $productNumber = Transaction::max('product_number') + 1;
-        $cartTotal = 0;
+        $userId = $user->id;
+        
+        $transactionNumber = Product::where('user_id', $userId)->max('transaction_number') + 1;
         $varietyOfItems = count($validatedData['cart']);
 
         foreach ($validatedData['cart'] as $item) {
@@ -131,9 +138,11 @@ class InventoryController extends Controller
             Transaction::create([
                 'user_id' => $user->id,
                 'user_name' => $user->name,
-                'product_number' => $productNumber,
+                'transaction_number' => $transactionNumber,
                 'product_name' => $item['name'],
                 'quantity' => $item['quantity'],
+                'netWeightNumber' => $item['netWeightNumber'],
+                'netWeightUnit' => $item['netWeightUnit'],
                 'price' => $item['price'],
                 'category' => $item['category'],
                 'total_amount' => $totalAmount,
@@ -146,7 +155,7 @@ class InventoryController extends Controller
             $product->save();
 
             ProductHistory::create([
-                'user_id' => $user->id, // <- Added user_id
+                'user_id' => $user->id,
                 'product_name' => $item['name'],
                 'action' => 'quantity decreased',
                 'changed_data' => 'quantity decreased by ' . $item['quantity'],
@@ -158,7 +167,7 @@ class InventoryController extends Controller
             ['amount' => 0, 'type' => 'income']
         );
 
-        $capital->user_id = $user->id; // <- ensure user_id
+        $capital->user_id = $user->id;
         $capital->amount += $cartTotal;
         $capital->type = 'income';
         $capital->save();
@@ -166,7 +175,7 @@ class InventoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Checkout completed successfully.',
-            'transaction_number' => $productNumber,
+            'transaction_number' => $transactionNumber,
         ]);
     }
     public function fetchLatestTransaction(Request $request)
@@ -267,8 +276,9 @@ class InventoryController extends Controller
             'quantity' => 'required|integer',
             'price' => 'required|numeric',
             'category' => 'nullable|string|max:255',
+            'netWeightNumber' => 'nullable',
+            'netWeightUnit' => 'nullable',
             'is_archived' => 'nullable',
-            'color_size' => 'nullable|string',
             'file_path' => 'nullable|string',
         ]);
 
@@ -276,7 +286,7 @@ class InventoryController extends Controller
         $product = Product::findOrFail($id);
 
 
-        foreach (['name', 'quantity', 'price', 'category', 'is_archived', 'file_path', 'color_size'] as $field) {
+        foreach (['name', 'quantity', 'price', 'category', 'is_archived', 'file_path', 'netWeightNumber', 'netWeightUnit'] as $field) {
             $newValue = $validatedData[$field] ?? null;
 
             if ($product->$field != $newValue) {
@@ -289,7 +299,8 @@ class InventoryController extends Controller
             'quantity' => $validatedData['quantity'],
             'price' => $validatedData['price'],
             'category' => $validatedData['category'],
-            'color_size' => $validatedData['color_size'],
+            'netWeightNumber' => $validatedData['netWeightNumber'],
+            'netWeightUnit' => $validatedData['netWeightUnit'],
             'user_id' => $user->id,
             'is_archived' => $validatedData['is_archived'] ?? false,
             'file_path' => $validatedData['file_path'],

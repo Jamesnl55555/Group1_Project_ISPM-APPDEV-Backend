@@ -18,10 +18,12 @@ return new class extends Migration
             $table->string('user_name');
             $table->string('product_name');
             $table->integer('variety_of_items');
-            $table->integer('product_number');
+            $table->integer('transaction_number')->nullable();
+            $table->unique(['user_id', 'transaction_number']);
             $table->string('category');
             $table->string('file_path');
-            $table->string('color_size')->nullable();
+            $table->string('netWeightNumber')->nullable();
+            $table->string('netWeightUnit')->nullable();
             $table->string('payment_method')->nullable();
             $table->integer('quantity')->nullable();
             $table->decimal('price', 10, 2)->nullable();

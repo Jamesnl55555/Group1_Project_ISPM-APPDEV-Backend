@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('file_path');
             $table->string('color_size')->nullable();
             $table->timestamps();
+            $table->unsignedInteger('product_number')->nullable();
+            $table->unique(['user_id', 'product_number']);
         });
     }
 
