@@ -42,13 +42,13 @@ class SendCodeController extends Controller
             $user->name,
             'Your Reset Code',
             "
-            <p><b>Hello</b></p>
+            <p><b>Hello!</b></p>
             <p>You are receiving this email because we received a request</p>
             <p>to verify your account.</p>
             <br/>
             <br/>
             <p>your verification code is:</p>
-            <h2><b>{$code}</b></h2>
+            <h2><b>Code: {$code}</b></h2>
             <br/>
             <br/>
 
