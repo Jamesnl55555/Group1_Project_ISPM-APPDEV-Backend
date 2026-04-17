@@ -128,11 +128,11 @@ class InventoryController extends Controller
         $user = $request->user();
         $userId = $user->id;
         
-        $transactionNumber = Transaction::where('user_id', $userId)->max('transaction_number') + 1;
+        $transactionNumber = (Transaction::where('user_id', $userId)->max('transaction_number') ?? 0) + 1;
         $varietyOfItems = count($validatedData['cart']);
         
         $cartTotal = 0;
-        
+
         foreach ($validatedData['cart'] as $item) {
             $totalAmount = $item['price'] * $item['quantity'];
             $cartTotal += $totalAmount;
