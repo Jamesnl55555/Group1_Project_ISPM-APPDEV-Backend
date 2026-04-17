@@ -22,7 +22,7 @@ return new class extends Migration
             $table->unique(['user_id', 'transaction_number']);
             $table->string('category');
             $table->string('file_path');
-            $table->string('netWeightNumber')->nullable();
+            $table->integer('netWeightNumber')->nullable();
             $table->string('netWeightUnit')->nullable();
             $table->string('payment_method')->nullable();
             $table->integer('quantity')->nullable();

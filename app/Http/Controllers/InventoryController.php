@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class InventoryController extends Controller
 {
@@ -128,7 +129,13 @@ class InventoryController extends Controller
         $user = $request->user();
         $userId = $user->id;
         
-        $transactionNumber = (Transaction::where('user_id', $userId)->max('transaction_number') ?? 0) + 1;
+        $transactionNumber = DB::transaction(function () use ($userId) {
+            $max = Transaction::where('user_id', $userId)
+                ->lockForUpdate()
+                ->max('transaction_number');
+
+            return ($max ?? 0) + 1;
+        });
         $varietyOfItems = count($validatedData['cart']);
         
         $cartTotal = 0;
