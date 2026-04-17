@@ -21,7 +21,8 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->boolean('is_archived')->default(false);
             $table->string('file_path');
-            $table->string('color_size')->nullable();
+            $table->string('netWeightNumber')->nullable();
+            $table->string('netWeightUnit')->nullable();
             $table->timestamps();
             $table->unsignedInteger('product_number')->nullable();
             $table->unique(['user_id', 'product_number']);

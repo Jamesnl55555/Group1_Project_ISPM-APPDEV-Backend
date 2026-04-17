@@ -21,7 +21,8 @@ class Product extends Model
         'product_number',
         'quantity', 
         'price',
-        'color_size',
+        'netWeightNumber',
+        'netWeightUnit',
         'category',
         'is_archived',
         'file_path'
