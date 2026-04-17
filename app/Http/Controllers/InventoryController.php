@@ -114,33 +114,37 @@ class InventoryController extends Controller
 
     public function checkout(Request $request)
     {
-        $validatedData = $request->validate([
-            'cart' => 'required|array',
-            'cart.*.id' => 'required|integer',
-            'cart.*.name' => 'required|string',
-            'cart.*.quantity' => 'required|integer',
-            'cart.*.price' => 'required|numeric',
-            'cart.*.netWeightNumber' => 'nullable',
-            'cart.*.netWeightUnit' => 'nullable',
-            'cart.*.file_path' => 'required|string',
-            'cart.*.category' => 'required|string'
-        ]);
+    $validatedData = $request->validate([
+        'cart' => 'required|array',
+        'cart.*.id' => 'required|integer',
+        'cart.*.name' => 'required|string',
+        'cart.*.quantity' => 'required|integer',
+        'cart.*.price' => 'required|numeric',
+        'cart.*.netWeightNumber' => 'nullable',
+        'cart.*.netWeightUnit' => 'nullable',
+        'cart.*.file_path' => 'required|string',
+        'cart.*.category' => 'required|string'
+    ]);
 
-        $user = $request->user();
-        $userId = $user->id;
-        
-        $transactionNumber = DB::transaction(function () use ($userId) {
-            $max = Transaction::where('user_id', $userId)
-                ->lockForUpdate()
-                ->max('transaction_number');
+    $user = $request->user();
+    $transactionNumber = 0;
 
-            return ($max ?? 0) + 1;
-        });
+    DB::transaction(function () use ($user, &$transactionNumber, $validatedData) {
+
+        $lockedUser = User::where('id', $user->id)
+            ->lockForUpdate()
+            ->first();
+
+        $max = Transaction::where('user_id', $user->id)
+            ->max('transaction_number');
+
+        $transactionNumber = ($max ?? 0) + 1;
+
         $varietyOfItems = count($validatedData['cart']);
-        
         $cartTotal = 0;
 
         foreach ($validatedData['cart'] as $item) {
+
             $totalAmount = $item['price'] * $item['quantity'];
             $cartTotal += $totalAmount;
 
@@ -172,20 +176,25 @@ class InventoryController extends Controller
         }
 
         $capital = Capital::firstOrNew(
-            ['created_at' => now()->startOfDay(), 'user_id' => $user->id],
-            ['amount' => 0, 'type' => 'income']
+            [
+                'user_id' => $user->id,
+                'created_at' => now()->startOfDay()
+            ],
+            [
+                'amount' => 0,
+                'type' => 'income'
+            ]
         );
 
-        $capital->user_id = $user->id;
         $capital->amount += $cartTotal;
-        $capital->type = 'income';
         $capital->save();
+    });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Checkout completed successfully.',
-            'transaction_number' => $transactionNumber,
-        ]);
+    return response()->json([
+        'success' => true,
+        'message' => 'Checkout completed successfully.',
+        'transaction_number' => $transactionNumber,
+    ]);
     }
     public function fetchLatestTransaction(Request $request)
     {
