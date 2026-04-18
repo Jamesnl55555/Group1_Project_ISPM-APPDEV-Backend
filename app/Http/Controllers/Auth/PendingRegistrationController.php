@@ -88,4 +88,41 @@ use Illuminate\Support\Facades\DB;
         'message' => 'Registration complete'
     ]);
     }
+
+    public function resend(Request $request)
+    {
+    $request->validate([
+        'email' => 'required|email',
+    ]);
+
+    $pending = PendingRegistration::where('email', $request->email)->first();
+
+    if (!$pending) {
+        return response()->json(['message' => 'No pending registration found'], 404);
+    }
+
+    $code = random_int(100000, 999999);
+
+    $pending->update([
+        'code' => $code,
+        'code_expires_at' => now()->addMinutes(15),
+    ]);
+
+    app(\App\Services\BrevoMailService::class)->sendEmail(
+        $pending->email,
+        $pending->name,
+        'Your New Verification Code',
+        "
+        <p>Hello {$pending->name},</p>
+        <p>Your new verification code is:</p>
+        <h2>{$code}</h2>
+        <p>This will expire in 15 minutes.</p>
+        "
+    );
+
+    return response()->json([
+        'success' => true,
+        'message' => 'New code sent to email.'
+    ]);
+    }
 }
