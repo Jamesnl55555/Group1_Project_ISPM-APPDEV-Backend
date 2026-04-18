@@ -282,15 +282,15 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     return response()->json(['latest_transaction_number' => $latestTransaction ?? 0]);
     }
     );
-    Route::get('/fetchProductNumber', function (Request $request) {
+    Route::get('/fetchTransactionNumber', function (Request $request) {
     $request->validate([
-        'product_number' => 'required'
+        'transaction_number' => 'required'
     ]);
 
     $user = $request->user();
     
     $transactions = Transaction::where('user_name', $user->name)
-        ->where('product_number', $request->product_number)
+        ->where('transaction_number', $request->transaction_number)
         ->get();
     return response()->json(['items' => $transactions]);
     }
