@@ -17,9 +17,9 @@ return new class extends Migration
         $table->id();
         $table->string('name')->nullable();
         $table->string('email')->unique();
-        $table->string('password'); // already hashed
-        $table->string('token')->unique();
-        $table->timestamp('expires_at');
+        $table->string('password');
+        $table->string('code');
+        $table->timestamp('code_expires_at');
         $table->timestamps();
     });
     }

@@ -85,8 +85,7 @@ use Illuminate\Support\Facades\DB;
 
     return response()->json([
         'success' => true,
-        'message' => 'Registration complete',
-        'user' => $user,
+        'message' => 'Registration complete'
     ]);
     }
 }

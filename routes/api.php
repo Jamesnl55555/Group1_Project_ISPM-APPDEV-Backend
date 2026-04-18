@@ -34,7 +34,7 @@ Route::get('/ping', function () {
 });
 
 Route::post('/register-pending', [PendingRegistrationController::class, 'store']);
-Route::get('/register-confirm', [PendingRegistrationController::class, 'confirm']);
+Route::post('/register-confirm', [PendingRegistrationController::class, 'confirm']);
 
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);

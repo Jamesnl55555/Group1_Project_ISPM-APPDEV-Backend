@@ -45,7 +45,6 @@ class RegisteredUserController extends Controller
         return response()->json([
             'success' => true,
             'user' => $user,
-            'token' => $token,
         ]);
     } 
 }
