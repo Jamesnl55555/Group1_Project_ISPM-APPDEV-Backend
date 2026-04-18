@@ -104,7 +104,7 @@ use Illuminate\Support\Facades\DB;
     $code = random_int(100000, 999999);
 
     $pending->update([
-        'code' => $code,
+        'code' => bcrypt($code),
         'code_expires_at' => now()->addMinutes(15),
     ]);
 
