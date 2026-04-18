@@ -7,22 +7,28 @@ use App\Models\PendingRegistration;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
-use Illuminate\Support\Facades\Http;
-
-use Illuminate\Support\Facades\DB;
 
     class PendingRegistrationController extends Controller
     {
 
     public function store(Request $request)
     {
+    $request->merge([
+        'email' => strtolower(trim($request->email))
+    ]);
     $request->validate([
         'name' => 'required|string|max:255',
         'email' => 'required|email|max:255|unique:pending_registrations,email|unique:users,email',
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
     ]);
+    
+
+    $domain = substr(strrchr($request->email, "@"), 1);
+
+    if (!checkdnsrr($domain, "MX")) {
+        return response()->json(['message' => 'Invalid email domain'], 422);
+    }
 
     $code = random_int(100000, 999999);
 
@@ -56,6 +62,9 @@ use Illuminate\Support\Facades\DB;
 
     public function confirm(Request $request)
     {
+    $request->merge([
+        'email' => strtolower(trim($request->email))
+    ]);
     $request->validate([
         'email' => 'required|email',
         'code' => 'required|digits:6',
@@ -75,7 +84,7 @@ use Illuminate\Support\Facades\DB;
         return response()->json(['message' => 'Invalid code'], 422);
     }
 
-    $user = User::create([
+    User::create([
         'name' => $pending->name,
         'email' => $pending->email,
         'password' => $pending->password,
@@ -91,6 +100,9 @@ use Illuminate\Support\Facades\DB;
 
     public function resend(Request $request)
     {
+    $request->merge([
+        'email' => strtolower(trim($request->email))
+    ]);
     $request->validate([
         'email' => 'required|email',
     ]);
