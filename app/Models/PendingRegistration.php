@@ -14,8 +14,8 @@ class PendingRegistration extends Model
         'name',
         'email',
         'password',
-        'token',
-        'expires_at',
+        'code',
+        'code_expires_at',
     ];
-    protected $dates = ['expires_at'];
+    protected $dates = ['code_expires_at'];
 }
