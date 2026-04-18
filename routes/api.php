@@ -27,6 +27,7 @@ use App\Http\Controllers\Auth\PendingRegistrationController;
 use App\Http\Controllers\CapitalReportController;
 use App\Http\Middleware\RefreshTokenExpiration;
 use App\Http\Controllers\UpdateProfileController;
+use Illuminate\Support\Facades\DB;
 
 Route::get('/ping', function () {
     return response()->json(['status' => 'ok']);
@@ -145,14 +146,21 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::get('/fetchtransactions', function (Request $request) {
     $user = $request->user();
 
-    $query = Transaction::where('user_name', $user->name);
+    $query = Transaction::where('user_id', $user->id)
+        ->select(
+            'transaction_number',
+            DB::raw('SUM(total_amount) as total_amount'),
+            DB::raw('MAX(created_at) as created_at')
+        )
+        ->groupBy('transaction_number');
 
     if ($request->has('search') && $request->search != '') {
-        $searchTerm = $request->search;
-        $query->where('id', 'like', '%' . $searchTerm . '%');
+        $query->having('transaction_number', 'like', '%' . $request->search . '%');
     }
 
-    $transactions = $query->orderBy('id', 'desc')->paginate(10);
+    $transactions = $query
+        ->orderByDesc('transaction_number')
+        ->paginate(10);
 
     return response()->json([
         'transactions' => $transactions->items(),
@@ -160,7 +168,6 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
         'last_page' => $transactions->lastPage(),
     ]);
     });
-
     Route::get('/fetchcapital', function (Request $request) {
     $user = $request->user();
     $perPage = $request->query('per_page', 10);
