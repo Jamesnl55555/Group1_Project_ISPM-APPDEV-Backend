@@ -11,9 +11,11 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Http;
 
-class PendingRegistrationController extends Controller
-{
-    // STEP 1: Store pending registration & send verification email
+use Illuminate\Support\Facades\DB;
+
+    class PendingRegistrationController extends Controller
+    {
+
     public function store(Request $request)
     {
     $request->validate([
@@ -22,87 +24,69 @@ class PendingRegistrationController extends Controller
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
     ]);
 
-    $token = Str::random(64);
+    $code = random_int(100000, 999999);
 
-    // Generate SPA-friendly verification link
-    $frontendUrl = env('FRONTEND_URL');
-    $verificationUrl = $frontendUrl . "/confirm-register?token={$token}";
+    $pending = PendingRegistration::updateOrCreate(
+        ['email' => $request->email],
+        [
+            'name' => $request->name,
+            'password' => Hash::make($request->password),
+            'code' => bcrypt($code),
+            'code_expires_at' => now()->addMinutes(15),
+        ]
+    );
 
-    $subject = 'Complete Your Registration';
-    $text = "Hi {$request->name},\n\n";
-    $text .= "Click this link to complete your registration:\n";
-    $text .= "$verificationUrl\n\n";
-    $text .= "If you did not register, ignore this email.";
-
-    // Send email using MailerSend API
-    $response = Http::withHeaders([
-        'Authorization' => 'Bearer ' . env('MAILERSEND_API_KEY'),
-        'Content-Type' => 'application/json',
-    ])->post('https://api.mailersend.com/v1/email', [
-        'from' => [
-            'email' => env('MAILERSEND_FROM_EMAIL'),
-            'name' => env('MAILERSEND_FROM_NAME'),
-        ],
-        'to' => [
-            ['email' => $request->email, 'name' => $request->name]
-        ],
-        'subject' => $subject,
-        'text' => $text,
-    ]);
-
-    // Check email success first
-    if (!$response->successful()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to send verification email. Please try again later.'
-        ], 500);
-    }
-
-    // Only create pending registration after email is sent
-    $pending = PendingRegistration::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'token' => $token,
-        'expires_at' => now()->addMinutes(60),
-    ]);
+    app(\App\Services\BrevoMailService::class)->sendEmail(
+        $request->email,
+        $request->name,
+        'Verify Your Account',
+        "
+        <p>Hello {$request->name},</p>
+        <p>Your verification code is:</p>
+        <h2>{$code}</h2>
+        <p>This will expire in 15 minutes.</p>
+        "
+    );
 
     return response()->json([
         'success' => true,
-        'message' => 'A verification email has been sent. Please check your inbox.',
+        'message' => 'Verification code sent to email.'
     ]);
     }
 
-
-    // STEP 2: Confirm email & create the real user
     public function confirm(Request $request)
     {
-        $pending = PendingRegistration::where('token', $request->token)
-            ->where('expires_at', '>=', now())
-            ->first();
+    $request->validate([
+        'email' => 'required|email',
+        'code' => 'required|digits:6',
+    ]);
 
-        if (!$pending) {
-            return response()->json(['message' => 'Invalid or expired token'], 422);
-        }
+    $pending = PendingRegistration::where('email', $request->email)->first();
 
-        // Create the actual user
-        $user = User::create([
-            'name' => $pending->name,
-            'email' => $pending->email,
-            'password' => $pending->password,
-        ]);
+    if (!$pending) {
+        return response()->json(['message' => 'Invalid request'], 422);
+    }
 
-        // Delete pending registration
-        $pending->delete();
+    if ($pending->code_expires_at < now()) {
+        return response()->json(['message' => 'Code expired'], 422);
+    }
 
-        // Create login token for SPA auto-login
-        $token = $user->createToken('auth-token')->plainTextToken;
+    if (!Hash::check($request->code, $pending->code)) {
+        return response()->json(['message' => 'Invalid code'], 422);
+    }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration complete!',
-            'user' => $user,
-            'token' => $token,
-        ]);
+    $user = User::create([
+        'name' => $pending->name,
+        'email' => $pending->email,
+        'password' => $pending->password,
+    ]);
+
+    $pending->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Registration complete',
+        'user' => $user,
+    ]);
     }
 }
