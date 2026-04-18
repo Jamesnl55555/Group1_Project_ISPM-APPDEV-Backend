@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('product_name');
             $table->integer('variety_of_items');
             $table->integer('transaction_number')->nullable();
-            $table->unique(['user_id', 'transaction_number']);
+            $table->index(['user_id', 'transaction_number']);
             $table->string('category');
             $table->string('file_path');
             $table->integer('netWeightNumber')->nullable();
