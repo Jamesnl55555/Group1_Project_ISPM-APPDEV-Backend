@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transactioncounter', function (Blueprint $table) {
+        Schema::create('transaction_counters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
             $table->integer('transaction_number')->default(0);
