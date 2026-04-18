@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Capital;
 use App\Models\ProductHistory;
 use App\Models\Transaction;
-use App\Models\TransactionHistory;
+use App\Models\TransactionCounter;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Cloudinary\Api\Upload\UploadApi;
@@ -112,7 +112,7 @@ class InventoryController extends Controller
     }
 
 
-    public function checkout(Request $request)
+   public function checkout(Request $request)
     {
     $validatedData = $request->validate([
         'cart' => 'required|array',
@@ -129,16 +129,23 @@ class InventoryController extends Controller
     $user = $request->user();
     $transactionNumber = 0;
 
-    DB::transaction(function () use ($user, &$transactionNumber, $validatedData) {
+    DB::transaction(function () use ($user, $validatedData, &$transactionNumber) {
 
-        $lockedUser = User::where('id', $user->id)
+        $counter = TransactionCounter::where('user_id', $user->id)
             ->lockForUpdate()
             ->first();
 
-        $max = Transaction::where('user_id', $user->id)
-            ->max('transaction_number');
+        if (!$counter) {
+            $counter = TransactionCounter::create([
+                'user_id' => $user->id,
+                'transaction_number' => 0
+            ]);
+        }
 
-        $transactionNumber = ($max ?? 0) + 1;
+        $counter->transaction_number += 1;
+        $counter->save();
+
+        $transactionNumber = $counter->transaction_number;
 
         $varietyOfItems = count($validatedData['cart']);
         $cartTotal = 0;
