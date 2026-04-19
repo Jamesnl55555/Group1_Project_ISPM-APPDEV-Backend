@@ -28,6 +28,8 @@ use App\Http\Controllers\CapitalReportController;
 use App\Http\Middleware\RefreshTokenExpiration;
 use App\Http\Controllers\UpdateProfileController;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
 
 Route::get('/ping', function () {
     return response()->json(['status' => 'ok']);
@@ -145,38 +147,46 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     Route::post('/archive-item/{id}', [InventoryController::class, 'archiveItem'])->name('archive-product');   
     
     Route::get('/fetchtransactions', function (Request $request) {
-    $user = $request->user();
+        $user = $request->user();
 
-    $query = Transaction::where('user_id', $user->id)
-    ->select(
-        'transaction_number',
-        DB::raw('SUM(total_amount) as total_amount'),
-        DB::raw('MAX(created_at) as created_at')
-    )
-    ->groupBy('transaction_number');
+        $query = Transaction::where('user_id', $user->id)
+            ->select(
+                'transaction_number',
+                DB::raw('SUM(total_amount) as total_amount'),
+                DB::raw('MAX(created_at) as created_at')
+            )
+            ->groupBy('transaction_number');
 
-    if ($request->filled('date')) {
-        $query->whereDate('created_at', $request->date);
-    }
+        if ($request->filled('date')) {
+            try {
+                $start = Carbon::parse($request->date, 'Asia/Manila')->startOfDay()->utc();
+                $end = Carbon::parse($request->date, 'Asia/Manila')->endOfDay()->utc();
 
-    $transactions = $query
-        ->orderByDesc('created_at')
-        ->paginate(10);
+                $query->whereBetween('created_at', [$start, $end]);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Invalid date'], 400);
+            }
+        }
 
-    return response()->json([
-        'transactions' => $transactions->items(),
-        'current_page' => $transactions->currentPage(),
-        'last_page' => $transactions->lastPage(),
-    ]);
+        $transactions = $query
+            ->orderByDesc(DB::raw('MAX(created_at)'))
+            ->paginate(10);
+
+        return response()->json([
+            'transactions' => $transactions->items(),
+            'current_page' => $transactions->currentPage(),
+            'last_page' => $transactions->lastPage(),
+        ]);
     });
-    
+
     Route::get('/transaction-dates', function (Request $request) {
         $user = $request->user();
 
         return Transaction::where('user_id', $user->id)
-            ->selectRaw('created_at::date as date')
-            ->groupBy(DB::raw('created_at::date'))
-            ->pluck('date');
+            ->selectRaw("DATE(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Manila') as date")
+            ->distinct()
+            ->pluck('date')
+            ->map(fn ($d) => (string) $d);
     });
 
     Route::get('/fetchcapital', function (Request $request) {
