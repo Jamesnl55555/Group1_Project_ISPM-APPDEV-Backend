@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use App\Jobs\SendVerificationEmail;
 
     class PendingRegistrationController extends Controller
     {
@@ -46,16 +47,16 @@ use Illuminate\Validation\Rules;
         ]
     );
 
-    app(\App\Services\BrevoMailService::class)->sendEmail(
-        $request->email,
-        $request->name,
-        'Verify Your Account',
-        "
-        <p>Hello {$request->name},</p>
-        <p>Your verification code is:</p>
-        <h2>{$code}</h2>
-        <p>This will expire in 15 minutes.</p>
-        "
+    SendVerificationEmail::dispatch(
+    $request->email,
+    $request->name,
+    'Verify Your Account',
+    "
+    <p>Hello {$request->name},</p>
+    <p>Your verification code is:</p>
+    <h2>{$code}</h2>
+    <p>This will expire in 15 minutes.</p>
+    "
     );
 
     return response()->json([
@@ -124,16 +125,16 @@ use Illuminate\Validation\Rules;
         'code_expires_at' => now()->addMinutes(15),
     ]);
 
-    app(\App\Services\BrevoMailService::class)->sendEmail(
-        $pending->email,
-        $pending->name,
-        'Your New Verification Code',
-        "
-        <p>Hello {$pending->name},</p>
-        <p>Your new verification code is:</p>
-        <h2>{$code}</h2>
-        <p>This will expire in 15 minutes.</p>
-        "
+    SendVerificationEmail::dispatch(
+    $pending->email,
+    $pending->name,
+    'Your New Verification Code',
+    "
+    <p>Hello {$pending->name},</p>
+    <p>Your new verification code is:</p>
+    <h2>{$code}</h2>
+    <p>This will expire in 15 minutes.</p>
+    "
     );
 
     return response()->json([
