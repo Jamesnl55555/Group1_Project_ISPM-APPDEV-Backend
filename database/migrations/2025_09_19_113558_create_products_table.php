@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2)->nullable();
             $table->string('category')->nullable();
             $table->boolean('is_archived')->default(false);
-            $table->string('file_path');
+            $table->string('file_path')->nullable();
             $table->string('netWeightNumber')->nullable();
             $table->string('netWeightUnit')->nullable();
             $table->timestamps();
