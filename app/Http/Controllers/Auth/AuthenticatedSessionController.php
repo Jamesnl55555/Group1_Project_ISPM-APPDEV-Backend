@@ -29,40 +29,53 @@ class AuthenticatedSessionController extends Controller
     */
     public function store(LoginRequest $request)
     {
-        $request->ensureIsNotRateLimited();
+    $request->ensureIsNotRateLimited();
 
-        $credentials = $request->only('email', 'password');
+    $email = $request->email;
+    $password = $request->password;
 
-        if (!Auth::attempt($credentials)) {
-            RateLimiter::hit($request->throttleKey());
+    // 1. Check if user exists
+    $user = User::where('email', $email)->first();
 
-            throw ValidationException::withMessages([
-                'email' => ['Invalid credentials.'],
-            ]);
-        }
+    if (!$user) {
+        RateLimiter::hit($request->throttleKey());
 
-        RateLimiter::clear($request->throttleKey());
-
-        $user = $request->user()->fresh();
-
-        $remember = $request->boolean('remember');
-
-        $token = $user->createToken('auth-token');
-
-        $token->accessToken->forceFill([
-            'remember' => $remember,
-        ])->save();
-
-        return response()->json([
-            'success' => true,
-            'user' => [
-                'name' => $user->name,
-                'storeName' => $user->storeName,
-                'email' => $user->email,
-                'profile_image' => $user->profile_image
-            ],
-            'token' => $token->plainTextToken,
+        throw ValidationException::withMessages([
+            'email' => ['Email does not exist.'],
         ]);
+    }
+
+    // 2. Check password separately
+    if (!Auth::attempt(['email' => $email, 'password' => $password])) {
+        RateLimiter::hit($request->throttleKey());
+
+        throw ValidationException::withMessages([
+            'password' => ['Wrong password.'],
+        ]);
+    }
+
+    RateLimiter::clear($request->throttleKey());
+
+    $user = $request->user()->fresh();
+
+    $remember = $request->boolean('remember');
+
+    $token = $user->createToken('auth-token');
+
+    $token->accessToken->forceFill([
+        'remember' => $remember,
+    ])->save();
+
+    return response()->json([
+        'success' => true,
+        'user' => [
+            'name' => $user->name,
+            'storeName' => $user->storeName,
+            'email' => $user->email,
+            'profile_image' => $user->profile_image
+        ],
+        'token' => $token->plainTextToken,
+    ]);
     }
     
     /**
