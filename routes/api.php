@@ -148,19 +148,19 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
     $user = $request->user();
 
     $query = Transaction::where('user_id', $user->id)
-        ->select(
-            'transaction_number',
-            DB::raw('SUM(total_amount) as total_amount'),
-            DB::raw('MAX(created_at) as created_at')
-        )
-        ->groupBy('transaction_number');
+    ->select(
+        'transaction_number',
+        DB::raw('SUM(total_amount) as total_amount'),
+        DB::raw('MAX(created_at) as created_at')
+    )
+    ->groupBy('transaction_number');
 
-    if ($request->has('search') && $request->search != '') {
-        $query->having('transaction_number', 'like', '%' . $request->search . '%');
+    if ($request->filled('date')) {
+        $query->whereDate('created_at', $request->date);
     }
 
     $transactions = $query
-        ->orderByDesc('transaction_number')
+        ->orderByDesc('created_at')
         ->paginate(10);
 
     return response()->json([
@@ -169,6 +169,16 @@ Route::middleware('auth:sanctum', RefreshTokenExpiration::class)->group(function
         'last_page' => $transactions->lastPage(),
     ]);
     });
+    
+    Route::get('/transaction-dates', function (Request $request) {
+        $user = $request->user();
+
+        return Transaction::where('user_id', $user->id)
+            ->selectRaw('created_at::date as date')
+            ->groupBy(DB::raw('created_at::date'))
+            ->pluck('date');
+    });
+
     Route::get('/fetchcapital', function (Request $request) {
     $user = $request->user();
     $perPage = $request->query('per_page', 10);
