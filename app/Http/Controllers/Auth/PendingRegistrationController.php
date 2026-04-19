@@ -27,7 +27,11 @@ use Illuminate\Validation\Rules;
     $domain = substr(strrchr($request->email, "@"), 1);
 
     if (!checkdnsrr($domain, "MX")) {
-        return response()->json(['message' => 'Invalid email domain'], 422);
+    return response()->json([
+        'errors' => [
+            'email' => ['Please enter a valid email address that can receive emails.']
+        ]
+    ], 422);
     }
 
     $code = random_int(100000, 999999);
