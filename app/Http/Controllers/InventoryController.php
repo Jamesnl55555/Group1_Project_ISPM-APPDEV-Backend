@@ -122,7 +122,7 @@ class InventoryController extends Controller
         'cart.*.price' => 'required|numeric',
         'cart.*.netWeightNumber' => 'nullable',
         'cart.*.netWeightUnit' => 'nullable',
-        'cart.*.file_path' => 'required|string',
+        'cart.*.file_path' => 'nullable|string',
         'cart.*.category' => 'required|string'
     ]);
 
