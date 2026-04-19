@@ -71,7 +71,7 @@ class InventoryController extends Controller
         'is_archived' => 'nullable',
         'netWeightNumber' => 'nullable',
         'netWeightUnit' => 'nullable',
-        'file_path' => 'required|string',
+        'file_path' => 'nullable|string',
     ]);
 
     // Check for existing product name
