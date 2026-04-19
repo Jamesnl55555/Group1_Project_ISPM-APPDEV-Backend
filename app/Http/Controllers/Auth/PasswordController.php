@@ -20,7 +20,7 @@ class PasswordController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Incorrect password',
-            ]);
+            ], 422);
         }
         return response()->json([
             'success' => true,
