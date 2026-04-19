@@ -20,7 +20,7 @@ use App\Jobs\SendVerificationEmail;
     ]);
     $request->validate([
         'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:pending_registrations,email|unique:users,email',
+        'email' => 'required|email|max:255|unique:users,email',
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
     ]);
     
