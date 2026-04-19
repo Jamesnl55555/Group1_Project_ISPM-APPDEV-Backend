@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('transaction_number')->nullable();
             $table->index(['user_id', 'transaction_number']);
             $table->string('category');
-            $table->string('file_path');
+            $table->string('file_path')->nullable();
             $table->integer('netWeightNumber')->nullable();
             $table->string('netWeightUnit')->nullable();
             $table->string('payment_method')->nullable();
