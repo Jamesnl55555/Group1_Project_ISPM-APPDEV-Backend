@@ -19,12 +19,12 @@ class SendCodeController extends Controller
 
     public function sendResetCode(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate(['email' => 'required|email|string']);
 
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return response()->json(['success' => true]);
+            return response()->json(['success' => false, 'message' => 'Email is not registered.'], 422);
         }
 
         $code = random_int(100000, 999999);
