@@ -57,10 +57,11 @@ class AuthenticatedSessionController extends Controller
     $remember = $request->boolean('remember');
 
     $accesstoken = $user->createToken('auth-token');
-
     $accesstoken->accessToken->forceFill([
-        'remember' => $remember,
         'last_used_at' => now(),
+        'expires_at' => $remember
+        ? now()->addDays(30)
+        : now()->addHours(2),
     ])->save();
 
     return response()->json([
