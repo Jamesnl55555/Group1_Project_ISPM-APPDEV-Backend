@@ -14,12 +14,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'refresh.token' => \App\Http\Middleware\RefreshTokenExpiration::class,
+        ]);
 
-        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO | Request::HEADER_X_FORWARDED_AWS_ELB);
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR |
+                    Request::HEADER_X_FORWARDED_HOST |
+                    Request::HEADER_X_FORWARDED_PORT |
+                    Request::HEADER_X_FORWARDED_PROTO |
+                    Request::HEADER_X_FORWARDED_AWS_ELB
+        );
 
-        // Make API stateful for Sanctum
         $middleware->statefulApi();
-        // Sanctum must be FIRST in the web stack
+
         $middleware->web(
             prepend: [
                 \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
@@ -34,12 +43,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ]
         );
 
-        // CORS handler
         $middleware->append([
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
-
-        // Exclude API routes from CSRF
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Custom exception handling if any

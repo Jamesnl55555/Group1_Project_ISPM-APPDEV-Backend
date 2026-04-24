@@ -9,26 +9,24 @@ class RefreshTokenExpiration
 {
     public function handle(Request $request, Closure $next)
     {
-        $response = $next($request);
-
-        $token = $request->user()?->currentAccessToken();
+       $token = $request->user()?->currentAccessToken();
 
         if ($token) {
-            $absoluteDays = $token->remember ? 30 : 7;
-            $absoluteExpiry = $token->created_at->addDays($absoluteDays);
 
-            if (now()->greaterThan($absoluteExpiry)) {
+            $lastUsed = $token->last_used_at ?? $token->created_at;
+
+            if (now()->greaterThan($lastUsed->addDays(30))) {
                 $token->delete();
-                return response()->json(['message' => 'Session expired.'], 401);
-            }
 
-            if ($token->expires_at && $token->expires_at->lt(now()->addMinutes(10))) {
-                $token->forceFill([
-                    'expires_at' => now()->addHour(),
-                ])->save();
+                return response()->json([
+                    'message' => 'Session expired due to inactivity.'
+                ], 401);
             }
+            $token->forceFill([
+                'last_used_at' => now(),
+            ])->save();
         }
 
-        return $response;
+        return $next($request);
     }
 }

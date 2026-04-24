@@ -5,9 +5,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
@@ -32,7 +32,6 @@ class AuthenticatedSessionController extends Controller
     $request->ensureIsNotRateLimited();
 
     $email = $request->email;
-    $password = $request->password;
 
     // 1. Check if user exists
     $user = User::where('email', $email)->first();
@@ -45,8 +44,7 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
-    // 2. Check password separately
-    if (!Auth::attempt(['email' => $email, 'password' => $password])) {
+    if (! Hash::check($request->password, $user->password)) {
         RateLimiter::hit($request->throttleKey());
 
         throw ValidationException::withMessages([
@@ -56,14 +54,13 @@ class AuthenticatedSessionController extends Controller
 
     RateLimiter::clear($request->throttleKey());
 
-    $user = $request->user()->fresh();
-
     $remember = $request->boolean('remember');
 
-    $token = $user->createToken('auth-token');
+    $accesstoken = $user->createToken('auth-token');
 
-    $token->accessToken->forceFill([
+    $accesstoken->accessToken->forceFill([
         'remember' => $remember,
+        'last_used_at' => now(),
     ])->save();
 
     return response()->json([
@@ -74,7 +71,7 @@ class AuthenticatedSessionController extends Controller
             'email' => $user->email,
             'profile_image' => $user->profile_image
         ],
-        'token' => $token->plainTextToken,
+        'token' => $accesstoken->plainTextToken,
     ]);
     }
     

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->boolean('remember')->default(false);
+            $table->timestamp('expires_at')->nullable()->after('remember');
         });
     }
 
@@ -22,7 +22,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->dropColumn('remember');
+        if (Schema::hasColumn('personal_access_tokens', 'expires_at')) {
+            $table->dropColumn('expires_at');
+        }
         });
     }
 };
