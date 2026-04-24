@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('user_name');
             $table->string('product_name');
             $table->integer('variety_of_items');
-            $table->integer('transaction_number')->nullable();
+            $table->integer('product_number');
+            $table->integer('transaction_number');
             $table->index(['user_id', 'transaction_number']);
             $table->string('category');
             $table->string('file_path')->nullable();

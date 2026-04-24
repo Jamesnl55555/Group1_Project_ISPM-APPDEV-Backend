@@ -19,6 +19,7 @@ class Transaction extends Model
         'transaction_number',
         'variety_of_items',
         'product_name',
+        'product_number',
         'netWeightNumber',
         'netWeightUnit',
         'payment_method',

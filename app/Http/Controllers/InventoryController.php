@@ -68,14 +68,16 @@ class InventoryController extends Controller
         'quantity' => 'required|integer',
         'price' => 'required|numeric',
         'category' => 'required|string|max:255',
-        'is_archived' => 'nullable',
-        'netWeightNumber' => 'nullable',
-        'netWeightUnit' => 'nullable',
+        'is_archived' => 'nullable|boolean',
+        'netWeightNumber' => 'nullable|numeric',
+        'netWeightUnit' => 'nullable|string|max:50',
         'file_path' => 'nullable|string',
     ]);
-
     // Check for existing product name
-    if (Product::where('name', $validatedData['name'])->exists()) {
+    $name = trim($validatedData['name']);
+    if (Product::where('user_id', $user->id)
+        ->whereRaw('LOWER(name) = ?', [strtolower($name)])
+        ->exists()) {
         return response()->json([
             'success' => false,
             'message' => 'Product with this name already exists.'
@@ -118,6 +120,7 @@ class InventoryController extends Controller
         'cart' => 'required|array',
         'cart.*.id' => 'required|integer',
         'cart.*.name' => 'required|string',
+        'cart.*.product_number' => 'required|integer',
         'cart.*.quantity' => 'required|integer',
         'cart.*.price' => 'required|numeric',
         'cart.*.netWeightNumber' => 'nullable',
@@ -160,6 +163,7 @@ class InventoryController extends Controller
                 'user_name' => $user->name,
                 'transaction_number' => $transactionNumber,
                 'product_name' => $item['name'],
+                'product_number' => $item['product_number'],
                 'quantity' => $item['quantity'],
                 'netWeightNumber' => $item['netWeightNumber'],
                 'netWeightUnit' => $item['netWeightUnit'],
