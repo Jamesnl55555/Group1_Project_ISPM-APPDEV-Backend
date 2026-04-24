@@ -65,7 +65,7 @@ Route::get('/api/sign-upload', function () {
     ]);
 });
 
-Route::middleware('auth:sanctum', 'refresh.token')->group(function () {
+Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
     Route::get('/user', function (Request $request) {
     return $request->user();
