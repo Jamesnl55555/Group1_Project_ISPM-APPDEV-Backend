@@ -61,7 +61,7 @@ class AuthenticatedSessionController extends Controller
         'last_used_at' => now(),
         'expires_at' => $remember
         ? now()->addDays(30)
-        : now()->addHours(2),
+        : now()->addMinutes(2),
     ])->save();
 
     return response()->json([
