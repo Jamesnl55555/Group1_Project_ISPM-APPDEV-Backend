@@ -157,6 +157,15 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
             )
             ->groupBy('transaction_number');
 
+        $productsLowStock = Product::where('user_id', $user->id)
+            ->where('is_archived', 0)
+            ->where('quantity', '<=', 20)
+            ->count();
+        $ProductsOutOfStock = Product::where('user_id', $user->id)
+            ->where('is_archived', 0)
+            ->where('quantity', 0)
+            ->count();
+
         if ($request->filled('date')) {
             try {
                 $start = Carbon::parse($request->date, 'Asia/Manila')->startOfDay()->utc();
@@ -172,10 +181,13 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
             ->orderByDesc(DB::raw('MAX(created_at)'))
             ->paginate(10);
 
+
         return response()->json([
             'transactions' => $transactions->items(),
             'current_page' => $transactions->currentPage(),
             'last_page' => $transactions->lastPage(),
+            'low_stock_count' => $productsLowStock,
+            'out_of_stock_count' => $ProductsOutOfStock
         ]);
     });
 
