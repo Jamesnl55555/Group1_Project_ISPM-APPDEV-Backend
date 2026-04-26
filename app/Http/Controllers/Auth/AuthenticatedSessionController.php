@@ -55,13 +55,16 @@ class AuthenticatedSessionController extends Controller
     RateLimiter::clear($request->throttleKey());
 
     $remember = $request->boolean('remember');
+    $duration = $remember
+    ? 60 * 60 * 24 * 30
+    : 60 * 60 * 2; 
 
     $accesstoken = $user->createToken('auth-token');
     $accesstoken->accessToken->forceFill([
         'last_used_at' => now(),
-        'expires_at' => $remember
-        ? now()->addDays(30)
-        : now()->addHours(2),
+        'name' => json_encode([
+            'duration' => $duration
+        ]),
     ])->save();
 
     return response()->json([

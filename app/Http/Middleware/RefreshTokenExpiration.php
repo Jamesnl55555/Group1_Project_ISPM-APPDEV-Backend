@@ -9,35 +9,36 @@ class RefreshTokenExpiration
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!$request->user()) {
+    if (!$request->user()) {
         return response()->json([
             'message' => 'Unauthenticated'
         ], 401);
-        }
+    }
 
-        $token = $request->user()->currentAccessToken();
+    $token = $request->user()->currentAccessToken();
 
-        if (!$token) {
-            return response()->json([
-                'message' => 'Invalid token'
-            ], 401);
-        }
+    if (!$token) {
+        return response()->json([
+            'message' => 'Invalid token'
+        ], 401);
+    }
 
-        $lastUsed = $token->last_used_at ?? $token->created_at;
-        $expiry = $lastUsed->copy()->addDays(30);
+    $meta = json_decode($token->name, true);
+    $duration = $meta['duration'] ?? 7200;
 
-        if (now()->greaterThan($expiry)) {
-            $token->delete();
+    $lastUsed = $token->last_used_at ?? $token->created_at;
 
-            return response()->json([
-                'message' => 'Session expired due to inactivity.'
-            ], 401);
-        }
+    if (now()->greaterThan($lastUsed->copy()->addSeconds($duration))) {
+        $token->delete();
 
-        $token->forceFill([
-            'last_used_at' => now(),
-        ])->save();
+        return response()->json([
+            'message' => 'Session expired due to inactivity.'
+        ], 401);
+    }
+    $token->forceFill([
+        'last_used_at' => now(),
+    ])->save();
 
-        return $next($request);
+    return $next($request);
     }
 }
