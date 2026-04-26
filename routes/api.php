@@ -79,11 +79,16 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
         $query = Product::where('user_id', $user->id)->where('is_archived', 0);
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where('name', 'like', '%' . $searchTerm . '%');
+
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'ILIKE', '%' . $searchTerm . '%')
+                ->orWhere('category', 'ILIKE', '%' . $searchTerm . '%')
+                ->orWhere('product_number', 'ILIKE', '%' . $searchTerm . '%');
+            });
         }
-        $products = $query->orderBy('id', 'desc')->paginate(10);
+        $products = $query->orderBy('quantity', 'asc')->paginate(10);
         return response()->json([
             'products' => $products->items(),
             'current_page' => $products->currentPage(),
