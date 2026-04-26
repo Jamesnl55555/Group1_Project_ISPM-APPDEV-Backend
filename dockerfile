@@ -53,10 +53,10 @@ RUN php artisan vendor:publish --tag=cloudinary
 # storage does not clear every reset
 # CMD php artisan migrate --force && apache2-foreground
 # worker
-# CMD php artisan migrate --force && (php artisan queue:work --sleep=3 --tries=3 --timeout=90 &) && apache2-foreground
+CMD php artisan migrate --force && (php artisan queue:work --sleep=3 --tries=3 --timeout=90 &) && apache2-foreground
 #===========
 # storage clear every reset
-CMD php artisan migrate:fresh --force && apache2-foreground
+# CMD php artisan migrate:fresh --force && apache2-foreground
 
 #===========
 # RUN chmod -R 777 storage bootstrap/cache
