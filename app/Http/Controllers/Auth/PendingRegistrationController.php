@@ -51,11 +51,27 @@ use App\Jobs\SendVerificationEmail;
     $request->email,
     $request->name,
     'Verify Your Account',
+    'Your Registration Verification Code',
     "
-    <p>Hello {$request->name},</p>
-    <p>Your verification code is:</p>
-    <h2>{$code}</h2>
-    <p>This will expire in 15 minutes.</p>
+    <p><b>Hello!</b></p>
+    <p>You are receiving this email because we received a request</p>
+    <p>to verify your account.</p>
+    <br/>
+    <br/>
+    <p>your verification code is:</p>
+    <h2><b>Code: {$code}</b></h2>
+    <br/>
+    <br/>
+
+    <p>This code will expire in 15 minutes.</p>
+    <p>If you did not request this, no further action is required.</p>
+    <br/>
+    <br/>
+    <p>Regards,</p>
+    <p>88 Chocolates</p>
+    <br/>
+    <br/>
+    <p>If you ae having trouble, you can ignore this email or conact support.</p>
     "
     );
 
