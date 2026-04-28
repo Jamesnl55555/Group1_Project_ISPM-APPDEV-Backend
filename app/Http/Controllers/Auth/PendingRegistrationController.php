@@ -50,7 +50,6 @@ use App\Jobs\SendVerificationEmail;
     SendVerificationEmail::dispatch(
     $request->email,
     $request->name,
-    'Verify Your Account',
     'Your Registration Verification Code',
     "
     <p><b>Hello!</b></p>
